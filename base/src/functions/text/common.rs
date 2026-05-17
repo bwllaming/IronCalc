@@ -11,17 +11,101 @@ use crate::{
     number_format::to_precision,
 };
 
-/// Finds the first instance of 'search_for' in text starting at char index start
-fn find(search_for: &str, text: &str, start: usize) -> Option<i32> {
-    let ch = text.chars();
-    let mut byte_index = 0;
-    for (char_index, c) in ch.enumerate() {
-        if char_index + 1 >= start && text[byte_index..].starts_with(search_for) {
-            return Some((char_index + 1) as i32);
+fn find_utf16(search_for: &str, text: &str, start: usize) -> Option<i32> {
+    let needle = search_for.encode_utf16().collect::<Vec<_>>();
+    let haystack = text.encode_utf16().collect::<Vec<_>>();
+    let start_index = start.checked_sub(1)?;
+    if needle.is_empty() {
+        if start_index <= haystack.len() {
+            return Some(start as i32);
         }
-        byte_index += c.len_utf8();
+        return None;
     }
-    None
+    if start_index >= haystack.len() {
+        return None;
+    }
+    haystack[start_index..]
+        .windows(needle.len())
+        .position(|window| window == needle.as_slice())
+        .map(|offset| (start_index + offset + 1) as i32)
+}
+
+fn utf16_len(text: &str) -> usize {
+    text.encode_utf16().count()
+}
+
+fn left_utf16_lossless(text: &str, count: usize) -> String {
+    let mut consumed = 0usize;
+    let mut end = 0usize;
+    for (index, character) in text.char_indices() {
+        let width = character.len_utf16();
+        if consumed + width > count {
+            break;
+        }
+        consumed += width;
+        end = index + character.len_utf8();
+    }
+    text[..end].to_string()
+}
+
+fn right_utf16_lossless(text: &str, count: usize) -> String {
+    if count == 0 {
+        return String::new();
+    }
+    let total = utf16_len(text);
+    if count >= total {
+        return text.to_string();
+    }
+    let target_start = total - count;
+    let mut consumed = 0usize;
+    for (index, character) in text.char_indices() {
+        let next = consumed + character.len_utf16();
+        if next > target_start {
+            return text[index..].to_string();
+        }
+        consumed = next;
+    }
+    String::new()
+}
+
+fn mid_utf16_lossless(text: &str, start: usize, count: usize) -> String {
+    if count == 0 {
+        return String::new();
+    }
+    let start_index = start.saturating_sub(1);
+    let end_index = start_index.saturating_add(count);
+    let mut consumed = 0usize;
+    let mut output = String::new();
+    for character in text.chars() {
+        let next = consumed + character.len_utf16();
+        if consumed >= end_index {
+            break;
+        }
+        if consumed >= start_index && next <= end_index {
+            output.push(character);
+        }
+        consumed = next;
+    }
+    output
+}
+
+fn trim_excel_ascii_spaces(text: &str) -> String {
+    let mut output = String::new();
+    let mut pending_internal_space = false;
+    for character in text.chars() {
+        if character == ' ' {
+            if !output.is_empty() {
+                pending_internal_space = true;
+            }
+            continue;
+        }
+        if pending_internal_space {
+            output.push(' ');
+            pending_internal_space = false;
+        }
+        output.push(character);
+    }
+    output
 }
 
 /// You can use the wildcard characters — the question mark (?) and asterisk (*) — in the find_text argument.
@@ -200,14 +284,14 @@ impl<'a> Model<'a> {
         }
         let start_num = start_num as usize;
 
-        if start_num > within_text.len() {
+        if start_num > utf16_len(&within_text) {
             return CalcResult::Error {
                 error: Error::VALUE,
                 origin: cell,
                 message: "Start num greater than length".to_string(),
             };
         }
-        if let Some(s) = find(&find_text, &within_text, start_num) {
+        if let Some(s) = find_utf16(&find_text, &within_text, start_num) {
             CalcResult::Number(s as f64)
         } else {
             CalcResult::Error {
@@ -306,7 +390,7 @@ impl<'a> Model<'a> {
                     }
                 }
             };
-            return CalcResult::Number(s.chars().count() as f64);
+            return CalcResult::Number(utf16_len(&s) as f64);
         }
         CalcResult::new_args_number_error(cell)
     }
@@ -341,7 +425,7 @@ impl<'a> Model<'a> {
                     }
                 }
             };
-            return CalcResult::String(s.trim().to_owned());
+            return CalcResult::String(trim_excel_ascii_spaces(&s));
         }
         CalcResult::new_args_number_error(cell)
     }
@@ -542,14 +626,7 @@ impl<'a> Model<'a> {
         } else {
             1
         };
-        let mut result = "".to_string();
-        for (index, ch) in s.chars().enumerate() {
-            if index >= num_chars {
-                break;
-            }
-            result.push(ch);
-        }
-        CalcResult::String(result)
+        CalcResult::String(left_utf16_lossless(&s, num_chars))
     }
 
     pub(crate) fn fn_right(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
@@ -624,14 +701,7 @@ impl<'a> Model<'a> {
         } else {
             1
         };
-        let mut result = "".to_string();
-        for (index, ch) in s.chars().rev().enumerate() {
-            if index >= num_chars {
-                break;
-            }
-            result.push(ch);
-        }
-        CalcResult::String(result.chars().rev().collect::<String>())
+        CalcResult::String(right_utf16_lossless(&s, num_chars))
     }
 
     pub(crate) fn fn_mid(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
@@ -737,18 +807,7 @@ impl<'a> Model<'a> {
                 }
             }
         };
-        let mut result = "".to_string();
-        let mut count: usize = 0;
-        for (index, ch) in s.chars().enumerate() {
-            if count >= num_chars {
-                break;
-            }
-            if index + 1 >= start_num {
-                result.push(ch);
-                count += 1;
-            }
-        }
-        CalcResult::String(result)
+        CalcResult::String(mid_utf16_lossless(&s, start_num, num_chars))
     }
 
     // REPT(text, number_times)
