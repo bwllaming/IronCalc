@@ -108,6 +108,69 @@ fn trim_excel_ascii_spaces(text: &str) -> String {
     output
 }
 
+fn parse_numbervalue_text(
+    text: &str,
+    decimal_separator: char,
+    group_separator: char,
+) -> Option<f64> {
+    if decimal_separator == group_separator {
+        return None;
+    }
+
+    let mut value = text.trim().to_string();
+    let mut percent_count = 0i32;
+    while value.ends_with('%') {
+        percent_count += 1;
+        value.pop();
+        value = value.trim_end().to_string();
+    }
+    if value.contains('%') {
+        return None;
+    }
+
+    let mut normalized = String::with_capacity(value.len());
+    let mut decimal_seen = false;
+    for character in value.chars() {
+        if character == group_separator {
+            continue;
+        }
+        if character == decimal_separator {
+            if decimal_seen {
+                return None;
+            }
+            normalized.push('.');
+            decimal_seen = true;
+            continue;
+        }
+        if character.is_ascii_whitespace() {
+            continue;
+        }
+        normalized.push(character);
+    }
+
+    if normalized.is_empty() || normalized == "+" || normalized == "-" {
+        return None;
+    }
+
+    let mut number = normalized.parse::<f64>().ok()?;
+    if !number.is_finite() {
+        return None;
+    }
+    if percent_count > 0 {
+        number /= 100_f64.powi(percent_count);
+    }
+    Some(number)
+}
+
+fn numbervalue_separator_arg(value: String) -> Option<char> {
+    let mut chars = value.chars();
+    let separator = chars.next()?;
+    if chars.next().is_some() {
+        return None;
+    }
+    Some(separator)
+}
+
 /// You can use the wildcard characters — the question mark (?) and asterisk (*) — in the find_text argument.
 /// * A question mark matches any single character.
 /// * An asterisk matches any sequence of characters.
@@ -1297,6 +1360,68 @@ impl<'a> Model<'a> {
                 error: Error::NIMPL,
                 origin: cell,
                 message: "Arrays not supported yet".to_string(),
+            },
+        }
+    }
+
+    // NUMBERVALUE(text, [decimal_separator], [group_separator])
+    pub(crate) fn fn_numbervalue(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
+        if args.is_empty() || args.len() > 3 {
+            return CalcResult::new_args_number_error(cell);
+        }
+
+        let text_result = self.evaluate_node_in_context(&args[0], cell);
+        let text = match self.cast_to_string(text_result, cell) {
+            Ok(value) => value,
+            Err(error) => return error,
+        };
+        let decimal_separator = match args.get(1) {
+            Some(arg) => {
+                let result = self.evaluate_node_in_context(arg, cell);
+                let value = match self.cast_to_string(result, cell) {
+                    Ok(value) => value,
+                    Err(error) => return error,
+                };
+                match numbervalue_separator_arg(value) {
+                    Some(separator) => separator,
+                    None => {
+                        return CalcResult::Error {
+                            error: Error::VALUE,
+                            origin: cell,
+                            message: "Invalid decimal separator".to_string(),
+                        }
+                    }
+                }
+            }
+            None => '.',
+        };
+        let group_separator = match args.get(2) {
+            Some(arg) => {
+                let result = self.evaluate_node_in_context(arg, cell);
+                let value = match self.cast_to_string(result, cell) {
+                    Ok(value) => value,
+                    Err(error) => return error,
+                };
+                match numbervalue_separator_arg(value) {
+                    Some(separator) => separator,
+                    None => {
+                        return CalcResult::Error {
+                            error: Error::VALUE,
+                            origin: cell,
+                            message: "Invalid group separator".to_string(),
+                        }
+                    }
+                }
+            }
+            None => ',',
+        };
+
+        match parse_numbervalue_text(&text, decimal_separator, group_separator) {
+            Some(value) => CalcResult::Number(value),
+            None => CalcResult::Error {
+                error: Error::VALUE,
+                origin: cell,
+                message: "Invalid number".to_string(),
             },
         }
     }

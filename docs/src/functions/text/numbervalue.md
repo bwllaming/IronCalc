@@ -6,7 +6,8 @@ lang: en-US
 
 # NUMBERVALUE
 
-::: warning
-🚧 This function is not yet available in IronCalc.
-[Follow development here](https://github.com/ironcalc/IronCalc/labels/Functions)
-:::
+Converts text to a number using explicit decimal and group separators.
+
+```text
+NUMBERVALUE(text, [decimal_separator], [group_separator])
+```

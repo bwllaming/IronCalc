@@ -32,7 +32,7 @@ You can track the progress in this [GitHub issue](https://github.com/ironcalc/Ir
 | LOWER       | <Badge type="info" text="Not implemented yet" /> | –             |
 | MID         | <Badge type="info" text="Not implemented yet" /> | –             |
 | MIDB        | <Badge type="info" text="Not implemented yet" /> | –             |
-| NUMBERVALUE | <Badge type="info" text="Not implemented yet" /> | –             |
+| NUMBERVALUE | <Badge type="tip" text="Available" />          | –             |
 | PHONETIC    | <Badge type="info" text="Not implemented yet" /> | –             |
 | PROPER      | <Badge type="info" text="Not implemented yet" /> | –             |
 | REPLACE     | <Badge type="info" text="Not implemented yet" /> | –             |

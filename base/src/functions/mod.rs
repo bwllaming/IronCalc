@@ -198,6 +198,7 @@ pub enum Function {
     Upper,
     Value,
     Valuetotext,
+    Numbervalue,
 
     // Statistical
     Average,
@@ -447,6 +448,9 @@ macro_rules! impl_function_lookup {
         impl Functions {
             pub fn lookup(&self, name: &str) -> Option<Function> {
                 let key = name.to_uppercase();
+                if key == "NUMBERVALUE" {
+                    return Some(Function::Numbervalue);
+                }
                 $(
                     if self.$field == key {
                         return Some(Function::$variant);
@@ -859,6 +863,9 @@ impl_function_lookup! {
 
 impl Function {
     pub fn to_localized_name(&self, language: &Language) -> String {
+        if let Some(name) = self.bw_english_name() {
+            return name;
+        }
         let functions = &language.functions;
         match self {
             Function::And => functions.and.clone(),
@@ -1019,6 +1026,7 @@ impl Function {
             Function::Upper => functions.upper.clone(),
             Function::Value => functions.value.clone(),
             Function::Valuetotext => functions.valuetotext.clone(),
+            Function::Numbervalue => "NUMBERVALUE".to_string(),
             Function::Average => functions.average.clone(),
             Function::Averagea => functions.averagea.clone(),
             Function::Averageif => functions.averageif.clone(),
@@ -1227,7 +1235,7 @@ impl Function {
             Function::Steyx => functions.steyx.clone(),
         }
     }
-    pub fn into_iter() -> IntoIter<Function, 364> {
+    pub fn into_iter() -> IntoIter<Function, 365> {
         [
             Function::And,
             Function::False,
@@ -1343,6 +1351,7 @@ impl Function {
             Function::Value,
             Function::T,
             Function::Valuetotext,
+            Function::Numbervalue,
             Function::Concat,
             Function::Find,
             Function::Left,
@@ -1751,6 +1760,15 @@ impl Function {
     }
 }
 
+impl Function {
+    fn bw_english_name(&self) -> Option<String> {
+        match self {
+            Function::Numbervalue => Some("NUMBERVALUE".to_string()),
+            _ => None,
+        }
+    }
+}
+
 impl<'a> Model<'a> {
     pub(crate) fn evaluate_function(
         &mut self,
@@ -1850,6 +1868,7 @@ impl<'a> Model<'a> {
             Function::Trim => self.fn_trim(args, cell),
             Function::Unicode => self.fn_unicode(args, cell),
             Function::Upper => self.fn_upper(args, cell),
+            Function::Numbervalue => self.fn_numbervalue(args, cell),
             Function::Isnumber => self.fn_isnumber(args, cell),
             Function::Isnontext => self.fn_isnontext(args, cell),
             Function::Istext => self.fn_istext(args, cell),

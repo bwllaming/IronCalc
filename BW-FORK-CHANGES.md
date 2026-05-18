@@ -12,3 +12,13 @@ for Conductor's IronCalc adapter evidence.
     emitting partial surrogate pairs.
   - `TRIM` removes/collapses ASCII space (`U+0020`) runs while preserving
     other whitespace such as NBSP.
+
+## NUMBERVALUE Text Formula
+
+- `base/src/functions/mod.rs`
+  - Registers the English `NUMBERVALUE` function name for Conductor formula
+    expansion evidence without changing localized language payloads.
+- `base/src/functions/text/common.rs`
+  - Adds scalar `NUMBERVALUE(text, [decimal_separator], [group_separator])`
+    parsing for explicit one-character decimal/group separators and percent
+    suffixes.
