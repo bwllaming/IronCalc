@@ -32,6 +32,16 @@ for Conductor's IronCalc adapter evidence.
   - Adds scalar `ADDRESS(row_num, column_num, [abs_num], [a1], [sheet_text])`
     evaluation for A1/R1C1 text output, bounds checks, and sheet-name quoting.
 
+## HYPERLINK Lookup/Reference Formula
+
+- `base/src/functions/mod.rs`
+  - Registers the English `HYPERLINK` function name for Conductor formula
+    expansion evidence without changing localized language payloads.
+- `base/src/functions/lookup_and_reference/mod.rs`
+  - Adds scalar `HYPERLINK(link_location, [friendly_name])` display-value
+    evaluation. The fork does not follow, fetch, validate, or preserve external
+    link targets through formula evaluation.
+
 ## NA Information Formula
 
 - `fork/sheets-engine/src/lib.rs`

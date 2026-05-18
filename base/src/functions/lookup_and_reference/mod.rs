@@ -682,6 +682,21 @@ impl<'a> Model<'a> {
         }
     }
 
+    // HYPERLINK(link_location, [friendly_name])
+    // Returns only the display value. Conductor never follows or fetches the link.
+    pub(crate) fn fn_hyperlink(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
+        if args.is_empty() || args.len() > 2 {
+            return CalcResult::new_args_number_error(cell);
+        }
+
+        let display_arg = args.get(1).unwrap_or(&args[0]);
+        let result = self.evaluate_node_in_context(display_arg, cell);
+        match self.cast_to_string(result, cell) {
+            Ok(value) => CalcResult::String(value),
+            Err(error) => error,
+        }
+    }
+
     // ADDRESS(row_num, column_num, [abs_num], [a1], [sheet_text])
     pub(crate) fn fn_address(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
         if !(2..=5).contains(&args.len()) {
