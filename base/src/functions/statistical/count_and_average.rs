@@ -606,6 +606,53 @@ impl<'a> Model<'a> {
         CalcResult::Number(median)
     }
 
+    pub(crate) fn fn_quartile(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
+        if args.len() != 2 {
+            return CalcResult::new_args_number_error(cell);
+        }
+
+        let quart = match self.get_number_no_bools(&args[1], cell) {
+            Ok(value) => value.trunc(),
+            Err(error) => return error,
+        };
+        if !(0.0..=4.0).contains(&quart) {
+            return CalcResult::Error {
+                error: Error::NUM,
+                origin: cell,
+                message: "QUARTILE quart argument must be between 0 and 4".to_string(),
+            };
+        }
+
+        let mut values = Vec::new();
+        if let Err(error) = self.for_each_value(&args[0..1], cell, |value| values.push(value)) {
+            return error;
+        }
+        if values.is_empty() {
+            return CalcResult::Error {
+                error: Error::NUM,
+                origin: cell,
+                message: "No numeric values for QUARTILE".to_string(),
+            };
+        }
+
+        values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+        if values.len() == 1 {
+            return CalcResult::Number(values[0]);
+        }
+
+        let position = (values.len() as f64 - 1.0) * (quart / 4.0);
+        let lower_index = position.floor() as usize;
+        let upper_index = position.ceil() as usize;
+        if lower_index == upper_index {
+            return CalcResult::Number(values[lower_index]);
+        }
+
+        let fraction = position - lower_index as f64;
+        CalcResult::Number(
+            values[lower_index] + (values[upper_index] - values[lower_index]) * fraction,
+        )
+    }
+
     pub(crate) fn fn_harmean(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
         if args.is_empty() {
             return CalcResult::new_args_number_error(cell);

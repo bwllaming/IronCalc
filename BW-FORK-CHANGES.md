@@ -48,3 +48,14 @@ for Conductor's IronCalc adapter evidence.
   - Adds a narrow Conductor adapter extension for no-argument `NA()` so
     `CalcEngine` returns the checked Excel `#N/A` value while the upstream
     IronCalc function registry remains missing the function.
+
+## QUARTILE Statistical Formula
+
+- `base/src/functions/mod.rs`
+  - Registers the English legacy `QUARTILE` function name for Conductor formula
+    expansion evidence without changing localized language payloads.
+- `base/src/functions/statistical/count_and_average.rs`
+  - Adds scalar legacy `QUARTILE(array, quart)` evaluation using Excel's
+    inclusive percentile interpolation for quart values 0 through 4.
+- `base/src/expressions/parser/static_analysis.rs`
+  - Classifies `QUARTILE` as vector-plus-scalar input with scalar output.

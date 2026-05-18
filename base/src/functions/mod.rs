@@ -275,6 +275,7 @@ pub enum Function {
     Phi,
     PoissonDist,
     // Prob,
+    Quartile,
     // QuartileExc,
     // QuartileInc,
     RankAvg,
@@ -458,6 +459,9 @@ macro_rules! impl_function_lookup {
                 }
                 if key == "HYPERLINK" {
                     return Some(Function::Hyperlink);
+                }
+                if key == "QUARTILE" {
+                    return Some(Function::Quartile);
                 }
                 $(
                     if self.$field == key {
@@ -1096,6 +1100,7 @@ impl Function {
             Function::Pearson => functions.pearson.clone(),
             Function::Phi => functions.phi.clone(),
             Function::PoissonDist => functions.poissondist.clone(),
+            Function::Quartile => "QUARTILE".to_string(),
             Function::RankAvg => functions.rankavg.clone(),
             Function::RankEq => functions.rankeq.clone(),
             Function::Skew => functions.skew.clone(),
@@ -1245,7 +1250,7 @@ impl Function {
             Function::Steyx => functions.steyx.clone(),
         }
     }
-    pub fn into_iter() -> IntoIter<Function, 367> {
+    pub fn into_iter() -> IntoIter<Function, 368> {
         [
             Function::And,
             Function::False,
@@ -1580,6 +1585,7 @@ impl Function {
             Function::Pearson,
             Function::Phi,
             Function::PoissonDist,
+            Function::Quartile,
             Function::Standardize,
             Function::StDevP,
             Function::StDevS,
@@ -2121,6 +2127,7 @@ impl<'a> Model<'a> {
             Function::Pearson => self.fn_pearson(args, cell),
             Function::Phi => self.fn_phi(args, cell),
             Function::PoissonDist => self.fn_poisson_dist(args, cell),
+            Function::Quartile => self.fn_quartile(args, cell),
             Function::Standardize => self.fn_standardize(args, cell),
             Function::StDevP => self.fn_stdev_p(args, cell),
             Function::StDevS => self.fn_stdev_s(args, cell),
