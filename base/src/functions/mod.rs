@@ -150,6 +150,7 @@ pub enum Function {
     Info,
 
     // Lookup and reference
+    Address,
     Filter,
     Hlookup,
     Index,
@@ -450,6 +451,9 @@ macro_rules! impl_function_lookup {
                 let key = name.to_uppercase();
                 if key == "NUMBERVALUE" {
                     return Some(Function::Numbervalue);
+                }
+                if key == "ADDRESS" {
+                    return Some(Function::Address);
                 }
                 $(
                     if self.$field == key {
@@ -897,6 +901,7 @@ impl Function {
             Function::Choose => functions.choose.clone(),
             Function::Column => functions.column.clone(),
             Function::Columns => functions.columns.clone(),
+            Function::Address => "ADDRESS".to_string(),
             Function::Cos => functions.cos.clone(),
             Function::Cosh => functions.cosh.clone(),
             Function::Log => functions.log.clone(),
@@ -1235,7 +1240,7 @@ impl Function {
             Function::Steyx => functions.steyx.clone(),
         }
     }
-    pub fn into_iter() -> IntoIter<Function, 365> {
+    pub fn into_iter() -> IntoIter<Function, 366> {
         [
             Function::And,
             Function::False,
@@ -1325,6 +1330,7 @@ impl Function {
             Function::Choose,
             Function::Column,
             Function::Columns,
+            Function::Address,
             Function::Index,
             Function::Indirect,
             Function::Hlookup,
@@ -1763,6 +1769,7 @@ impl Function {
 impl Function {
     fn bw_english_name(&self) -> Option<String> {
         match self {
+            Function::Address => Some("ADDRESS".to_string()),
             Function::Numbervalue => Some("NUMBERVALUE".to_string()),
             _ => None,
         }
@@ -1830,6 +1837,7 @@ impl<'a> Model<'a> {
             Function::Choose => self.fn_choose(args, cell),
             Function::Column => self.fn_column(args, cell),
             Function::Columns => self.fn_columns(args, cell),
+            Function::Address => self.fn_address(args, cell),
             Function::Index => self.fn_index(args, cell),
             Function::Indirect => self.fn_indirect(args, cell),
             Function::Hlookup => self.fn_hlookup(args, cell),

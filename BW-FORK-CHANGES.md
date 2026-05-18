@@ -22,3 +22,12 @@ for Conductor's IronCalc adapter evidence.
   - Adds scalar `NUMBERVALUE(text, [decimal_separator], [group_separator])`
     parsing for explicit one-character decimal/group separators and percent
     suffixes.
+
+## ADDRESS Lookup/Reference Formula
+
+- `base/src/functions/mod.rs`
+  - Registers the English `ADDRESS` function name for Conductor formula
+    expansion evidence without changing localized language payloads.
+- `base/src/functions/lookup_and_reference/mod.rs`
+  - Adds scalar `ADDRESS(row_num, column_num, [abs_num], [a1], [sheet_text])`
+    evaluation for A1/R1C1 text output, bounds checks, and sheet-name quoting.

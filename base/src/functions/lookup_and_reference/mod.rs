@@ -1,8 +1,8 @@
 use crate::constants::{LAST_COLUMN, LAST_ROW};
 use crate::expressions::types::CellReferenceIndex;
 use crate::{
-    calc_result::CalcResult, expressions::parser::Node, expressions::token::Error, model::Model,
-    utils::ParsedReference,
+    calc_result::CalcResult, expressions::parser::Node, expressions::token::Error,
+    expressions::utils::number_to_column, model::Model, utils::ParsedReference,
 };
 
 use super::util::{compare_values, from_wildcard_to_regex, result_matches_regex, values_are_equal};
@@ -682,6 +682,116 @@ impl<'a> Model<'a> {
         }
     }
 
+    // ADDRESS(row_num, column_num, [abs_num], [a1], [sheet_text])
+    pub(crate) fn fn_address(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
+        if !(2..=5).contains(&args.len()) {
+            return CalcResult::new_args_number_error(cell);
+        }
+
+        let row = match self.get_number(&args[0], cell) {
+            Ok(value) => value.trunc() as i32,
+            Err(error) => return error,
+        };
+        let column = match self.get_number(&args[1], cell) {
+            Ok(value) => value.trunc() as i32,
+            Err(error) => return error,
+        };
+        if !(1..=LAST_ROW).contains(&row) || !(1..=LAST_COLUMN).contains(&column) {
+            return CalcResult::Error {
+                error: Error::VALUE,
+                origin: cell,
+                message: "Invalid row or column".to_string(),
+            };
+        }
+
+        let abs_num = if let Some(arg) = args.get(2) {
+            if matches!(arg, Node::EmptyArgKind) {
+                1
+            } else {
+                match self.get_number(arg, cell) {
+                    Ok(value) => value.trunc() as i32,
+                    Err(error) => return error,
+                }
+            }
+        } else {
+            1
+        };
+        let (absolute_row, absolute_column) = match abs_num {
+            1 => (true, true),
+            2 => (true, false),
+            3 => (false, true),
+            4 => (false, false),
+            _ => {
+                return CalcResult::Error {
+                    error: Error::VALUE,
+                    origin: cell,
+                    message: "Invalid abs_num".to_string(),
+                }
+            }
+        };
+
+        let a1_style = if let Some(arg) = args.get(3) {
+            if matches!(arg, Node::EmptyArgKind) {
+                true
+            } else {
+                match self.get_boolean(arg, cell) {
+                    Ok(value) => value,
+                    Err(error) => return error,
+                }
+            }
+        } else {
+            true
+        };
+        let sheet_text = if let Some(arg) = args.get(4) {
+            if matches!(arg, Node::EmptyArgKind) {
+                None
+            } else {
+                match self.get_string(arg, cell) {
+                    Ok(value) => Some(value),
+                    Err(error) => return error,
+                }
+            }
+        } else {
+            None
+        };
+
+        let mut address = if a1_style {
+            let column_text = match number_to_column(column) {
+                Some(value) => value,
+                None => {
+                    return CalcResult::Error {
+                        error: Error::VALUE,
+                        origin: cell,
+                        message: "Invalid column".to_string(),
+                    }
+                }
+            };
+            format!(
+                "{}{}{}{}",
+                if absolute_column { "$" } else { "" },
+                column_text,
+                if absolute_row { "$" } else { "" },
+                row
+            )
+        } else {
+            format!(
+                "{}{}{}{}",
+                if absolute_row { "R" } else { "R[" },
+                row,
+                if absolute_row { "C" } else { "]C" },
+                if absolute_column {
+                    column.to_string()
+                } else {
+                    format!("[{column}]")
+                }
+            )
+        };
+        if let Some(sheet_text) = sheet_text {
+            address = format!("{}!{}", quote_sheet_name(&sheet_text), address);
+        }
+        CalcResult::String(address)
+    }
+
     // INDIRECT(ref_tex)
     // Returns the reference specified by 'ref_text'
     pub(crate) fn fn_indirect(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
@@ -884,5 +994,17 @@ impl<'a> Model<'a> {
                 message: "Argument must be a reference".to_string(),
             }
         }
+    }
+}
+
+fn quote_sheet_name(sheet_name: &str) -> String {
+    let needs_quotes = sheet_name.is_empty()
+        || sheet_name
+            .chars()
+            .any(|ch| !ch.is_ascii_alphanumeric() && ch != '_');
+    if needs_quotes {
+        format!("'{}'", sheet_name.replace('\'', "''"))
+    } else {
+        sheet_name.to_string()
     }
 }
