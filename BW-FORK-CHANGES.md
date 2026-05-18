@@ -59,3 +59,12 @@ for Conductor's IronCalc adapter evidence.
     inclusive percentile interpolation for quart values 0 through 4.
 - `base/src/expressions/parser/static_analysis.rs`
   - Classifies `QUARTILE` as vector-plus-scalar input with scalar output.
+
+## MINVERSE Matrix Formula
+
+- `fork/sheets-engine/src/lib.rs`
+  - Adds a narrow Conductor adapter extension for bounded local square-matrix
+    `MINVERSE` evaluation and `INDEX(MINVERSE(...), row, column)` scalar
+    extraction so `CalcEngine` can compare the checked Excel expansion
+    representative and full spill output while upstream IronCalc remains
+    missing the function.
