@@ -32,6 +32,14 @@ for Conductor's IronCalc adapter evidence.
   - Adds scalar `PROPER(text)` title-casing for text, numeric, boolean, and
     blank inputs through the existing text coercion path.
 
+## VALUETOTEXT Text Formula
+
+- `base/src/functions/text/common.rs`
+  - Accepts the optional `format` argument for scalar `VALUETOTEXT(value,
+    [format])` calls so Conductor can route the checked expansion evidence
+    through the IronCalc adapter. Strict formatting remains gated by Conductor
+    migration-safe routing until Excel oracle coverage is added.
+
 ## REPLACE Text Formula
 
 - `base/src/functions/mod.rs`

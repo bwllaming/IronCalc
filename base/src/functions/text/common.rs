@@ -1527,10 +1527,15 @@ impl<'a> Model<'a> {
         }
     }
 
-    // VALUETOTEXT(value)
+    // VALUETOTEXT(value, [format])
     pub(crate) fn fn_valuetotext(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
-        if args.len() != 1 {
+        if !(1..=2).contains(&args.len()) {
             return CalcResult::new_args_number_error(cell);
+        }
+        if let Some(format) = args.get(1) {
+            if let Err(error) = self.get_number(format, cell) {
+                return error;
+            }
         }
         let text = match self.get_string(&args[0], cell) {
             Ok(s) => s,
