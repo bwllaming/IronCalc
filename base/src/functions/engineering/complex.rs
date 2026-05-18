@@ -350,12 +350,9 @@ impl<'a> Model<'a> {
             return CalcResult::String(complex.to_string());
         }
 
-        let x_cot = 1.0 / x.tan();
-        let y_coth = 1.0 / y.tanh();
-
-        let t = x_cot * x_cot + y_coth * y_coth;
-        let x = (x_cot * y_coth * y_coth - x_cot) / t;
-        let y = (-x_cot * x_cot * y_coth - y_coth) / t;
+        let t = (2.0 * y).cosh() - (2.0 * x).cos();
+        let x = (2.0 * x).sin() / t;
+        let y = -(2.0 * y).sinh() / t;
 
         if x.is_infinite() || y.is_infinite() || x.is_nan() || y.is_nan() {
             return CalcResult::new_error(Error::NUM, cell, "Invalid operation".to_string());
@@ -755,14 +752,11 @@ impl<'a> Model<'a> {
             Err(error) => return error,
         };
 
-        let x_tan = x.tan();
-        let y_tanh = y.tanh();
-
-        let t = 1.0 + x_tan * x_tan * y_tanh * y_tanh;
+        let t = (2.0 * x).cos() + (2.0 * y).cosh();
 
         let complex = Complex {
-            x: (x_tan - x_tan * y_tanh * y_tanh) / t,
-            y: (y_tanh + x_tan * x_tan * y_tanh) / t,
+            x: (2.0 * x).sin() / t,
+            y: (2.0 * y).sinh() / t,
             suffix,
         };
         CalcResult::String(complex.to_string())
