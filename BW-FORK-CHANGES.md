@@ -31,3 +31,10 @@ for Conductor's IronCalc adapter evidence.
 - `base/src/functions/lookup_and_reference/mod.rs`
   - Adds scalar `ADDRESS(row_num, column_num, [abs_num], [a1], [sheet_text])`
     evaluation for A1/R1C1 text output, bounds checks, and sheet-name quoting.
+
+## NA Information Formula
+
+- `fork/sheets-engine/src/lib.rs`
+  - Adds a narrow Conductor adapter extension for no-argument `NA()` so
+    `CalcEngine` returns the checked Excel `#N/A` value while the upstream
+    IronCalc function registry remains missing the function.
