@@ -108,6 +108,25 @@ fn trim_excel_ascii_spaces(text: &str) -> String {
     output
 }
 
+fn proper_case(text: &str) -> String {
+    let mut output = String::new();
+    let mut capitalize_next = true;
+    for character in text.chars() {
+        if character.is_alphabetic() {
+            if capitalize_next {
+                output.extend(character.to_uppercase());
+            } else {
+                output.extend(character.to_lowercase());
+            }
+            capitalize_next = false;
+        } else {
+            output.push(character);
+            capitalize_next = true;
+        }
+    }
+    output
+}
+
 fn parse_numbervalue_text(
     text: &str,
     decimal_separator: char,
@@ -615,6 +634,17 @@ impl<'a> Model<'a> {
             return CalcResult::String(s.to_uppercase());
         }
         CalcResult::new_args_number_error(cell)
+    }
+
+    pub(crate) fn fn_proper(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
+        if args.len() != 1 {
+            return CalcResult::new_args_number_error(cell);
+        }
+        let text = match self.get_string(&args[0], cell) {
+            Ok(value) => value,
+            Err(error) => return error,
+        };
+        CalcResult::String(proper_case(&text))
     }
 
     pub(crate) fn fn_left(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {

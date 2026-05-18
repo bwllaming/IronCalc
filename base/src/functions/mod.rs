@@ -186,6 +186,7 @@ pub enum Function {
     Len,
     Lower,
     Mid,
+    Proper,
     Rept,
     Right,
     Search,
@@ -462,6 +463,9 @@ macro_rules! impl_function_lookup {
                 }
                 if key == "QUARTILE" {
                     return Some(Function::Quartile);
+                }
+                if key == "PROPER" {
+                    return Some(Function::Proper);
                 }
                 $(
                     if self.$field == key {
@@ -1026,6 +1030,7 @@ impl Function {
             Function::Len => functions.len.clone(),
             Function::Lower => functions.lower.clone(),
             Function::Mid => functions.mid.clone(),
+            Function::Proper => "PROPER".to_string(),
             Function::Rept => functions.rept.clone(),
             Function::Right => functions.right.clone(),
             Function::Search => functions.search.clone(),
@@ -1250,7 +1255,7 @@ impl Function {
             Function::Steyx => functions.steyx.clone(),
         }
     }
-    pub fn into_iter() -> IntoIter<Function, 368> {
+    pub fn into_iter() -> IntoIter<Function, 369> {
         [
             Function::And,
             Function::False,
@@ -1375,6 +1380,7 @@ impl Function {
             Function::Len,
             Function::Lower,
             Function::Mid,
+            Function::Proper,
             Function::Right,
             Function::Search,
             Function::Text,
@@ -1884,6 +1890,7 @@ impl<'a> Model<'a> {
             Function::Len => self.fn_len(args, cell),
             Function::Lower => self.fn_lower(args, cell),
             Function::Mid => self.fn_mid(args, cell),
+            Function::Proper => self.fn_proper(args, cell),
             Function::Right => self.fn_right(args, cell),
             Function::Search => self.fn_search(args, cell),
             Function::Text => self.fn_text(args, cell),

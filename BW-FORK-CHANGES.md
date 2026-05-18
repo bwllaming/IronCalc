@@ -23,6 +23,15 @@ for Conductor's IronCalc adapter evidence.
     parsing for explicit one-character decimal/group separators and percent
     suffixes.
 
+## PROPER Text Formula
+
+- `base/src/functions/mod.rs`
+  - Registers the English `PROPER` function name for Conductor formula
+    expansion evidence without changing localized language payloads.
+- `base/src/functions/text/common.rs`
+  - Adds scalar `PROPER(text)` title-casing for text, numeric, boolean, and
+    blank inputs through the existing text coercion path.
+
 ## ADDRESS Lookup/Reference Formula
 
 - `base/src/functions/mod.rs`
