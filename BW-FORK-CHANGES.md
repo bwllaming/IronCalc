@@ -32,6 +32,18 @@ for Conductor's IronCalc adapter evidence.
   - Adds scalar `PROPER(text)` title-casing for text, numeric, boolean, and
     blank inputs through the existing text coercion path.
 
+## REPLACE Text Formula
+
+- `base/src/functions/mod.rs`
+  - Registers the English `REPLACE` function name for Conductor formula
+    expansion evidence without changing localized language payloads.
+- `base/src/functions/text/common.rs`
+  - Adds scalar `REPLACE(old_text, start_num, num_chars, new_text)` evaluation
+    with Excel-style one-based positions, truncating numeric offsets and
+    appending replacement text when `start_num` is past the source text.
+- `base/src/expressions/parser/static_analysis.rs`
+  - Classifies `REPLACE` as four scalar arguments with scalar output.
+
 ## ADDRESS Lookup/Reference Formula
 
 - `base/src/functions/mod.rs`

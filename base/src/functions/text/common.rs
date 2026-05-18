@@ -89,6 +89,19 @@ fn mid_utf16_lossless(text: &str, start: usize, count: usize) -> String {
     output
 }
 
+fn replace_utf16_lossless(text: &str, start: usize, count: usize, new_text: &str) -> String {
+    let start_index = start.saturating_sub(1);
+    let end_index = start_index.saturating_add(count);
+    let total = utf16_len(text);
+    if start_index >= total {
+        return format!("{text}{new_text}");
+    }
+    let prefix = left_utf16_lossless(text, start_index);
+    let suffix_units = total.saturating_sub(end_index.min(total));
+    let suffix = right_utf16_lossless(text, suffix_units);
+    format!("{prefix}{new_text}{suffix}")
+}
+
 fn trim_excel_ascii_spaces(text: &str) -> String {
     let mut output = String::new();
     let mut pending_internal_space = false;
@@ -901,6 +914,51 @@ impl<'a> Model<'a> {
             }
         };
         CalcResult::String(mid_utf16_lossless(&s, start_num, num_chars))
+    }
+
+    // REPLACE(old_text, start_num, num_chars, new_text)
+    pub(crate) fn fn_replace(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
+        if args.len() != 4 {
+            return CalcResult::new_args_number_error(cell);
+        }
+        let old_text = match self.get_string(&args[0], cell) {
+            Ok(s) => s,
+            Err(error) => return error,
+        };
+        let start_num = match self.get_number(&args[1], cell) {
+            Ok(value) => {
+                if value < 1.0 {
+                    return CalcResult::Error {
+                        error: Error::VALUE,
+                        origin: cell,
+                        message: "Start num must be >= 1".to_string(),
+                    };
+                }
+                value.floor() as usize
+            }
+            Err(error) => return error,
+        };
+        let num_chars = match self.get_number(&args[2], cell) {
+            Ok(value) => {
+                if value < 0.0 {
+                    return CalcResult::Error {
+                        error: Error::VALUE,
+                        origin: cell,
+                        message: "Number must be >= 0".to_string(),
+                    };
+                }
+                value.floor() as usize
+            }
+            Err(error) => return error,
+        };
+        let new_text = match self.get_string(&args[3], cell) {
+            Ok(s) => s,
+            Err(error) => return error,
+        };
+
+        CalcResult::String(replace_utf16_lossless(
+            &old_text, start_num, num_chars, &new_text,
+        ))
     }
 
     // REPT(text, number_times)

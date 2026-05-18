@@ -187,6 +187,7 @@ pub enum Function {
     Lower,
     Mid,
     Proper,
+    Replace,
     Rept,
     Right,
     Search,
@@ -466,6 +467,9 @@ macro_rules! impl_function_lookup {
                 }
                 if key == "PROPER" {
                     return Some(Function::Proper);
+                }
+                if key == "REPLACE" {
+                    return Some(Function::Replace);
                 }
                 $(
                     if self.$field == key {
@@ -1031,6 +1035,7 @@ impl Function {
             Function::Lower => functions.lower.clone(),
             Function::Mid => functions.mid.clone(),
             Function::Proper => "PROPER".to_string(),
+            Function::Replace => "REPLACE".to_string(),
             Function::Rept => functions.rept.clone(),
             Function::Right => functions.right.clone(),
             Function::Search => functions.search.clone(),
@@ -1255,7 +1260,7 @@ impl Function {
             Function::Steyx => functions.steyx.clone(),
         }
     }
-    pub fn into_iter() -> IntoIter<Function, 369> {
+    pub fn into_iter() -> IntoIter<Function, 370> {
         [
             Function::And,
             Function::False,
@@ -1381,6 +1386,7 @@ impl Function {
             Function::Lower,
             Function::Mid,
             Function::Proper,
+            Function::Replace,
             Function::Right,
             Function::Search,
             Function::Text,
@@ -1790,6 +1796,8 @@ impl Function {
             Function::Address => Some("ADDRESS".to_string()),
             Function::Hyperlink => Some("HYPERLINK".to_string()),
             Function::Numbervalue => Some("NUMBERVALUE".to_string()),
+            Function::Proper => Some("PROPER".to_string()),
+            Function::Replace => Some("REPLACE".to_string()),
             _ => None,
         }
     }
@@ -1891,6 +1899,7 @@ impl<'a> Model<'a> {
             Function::Lower => self.fn_lower(args, cell),
             Function::Mid => self.fn_mid(args, cell),
             Function::Proper => self.fn_proper(args, cell),
+            Function::Replace => self.fn_replace(args, cell),
             Function::Right => self.fn_right(args, cell),
             Function::Search => self.fn_search(args, cell),
             Function::Text => self.fn_text(args, cell),
