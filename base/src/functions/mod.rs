@@ -445,6 +445,7 @@ pub enum Function {
     Correl,
     Rsq,
     Intercept,
+    ForecastLinear,
     Slope,
     Steyx,
 }
@@ -501,6 +502,9 @@ macro_rules! impl_function_lookup {
                 }
                 if key == "MODE.SNGL" || key == "_XLFN.MODE.SNGL" {
                     return Some(Function::ModeSingl);
+                }
+                if key == "FORECAST.LINEAR" || key == "_XLFN.FORECAST.LINEAR" {
+                    return Some(Function::ForecastLinear);
                 }
                 $(
                     if self.$field == key {
@@ -1297,11 +1301,12 @@ impl Function {
             Function::Correl => functions.correl.clone(),
             Function::Rsq => functions.rsq.clone(),
             Function::Intercept => functions.intercept.clone(),
+            Function::ForecastLinear => "FORECAST.LINEAR".to_string(),
             Function::Slope => functions.slope.clone(),
             Function::Steyx => functions.steyx.clone(),
         }
     }
-    pub fn into_iter() -> IntoIter<Function, 380> {
+    pub fn into_iter() -> IntoIter<Function, 381> {
         [
             Function::And,
             Function::False,
@@ -1668,6 +1673,7 @@ impl Function {
             Function::Correl,
             Function::Rsq,
             Function::Intercept,
+            Function::ForecastLinear,
             Function::Slope,
             Function::Steyx,
             Function::Large,
@@ -2233,6 +2239,7 @@ impl<'a> Model<'a> {
             Function::Correl => self.fn_correl(args, cell),
             Function::Rsq => self.fn_rsq(args, cell),
             Function::Intercept => self.fn_intercept(args, cell),
+            Function::ForecastLinear => self.fn_forecast_linear(args, cell),
             Function::Slope => self.fn_slope(args, cell),
             Function::Steyx => self.fn_steyx(args, cell),
             Function::Gauss => self.fn_gauss(args, cell),

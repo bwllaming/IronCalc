@@ -50,7 +50,7 @@ You can track the progress in this [GitHub issue](https://github.com/ironcalc/Ir
 | FORECAST.ETS.CONFINT     | <Badge type="info" text="Not implemented yet" /> | –             |
 | FORECAST.ETS.SEASONALITY | <Badge type="info" text="Not implemented yet" /> | –             |
 | FORECAST.ETS.STAT        | <Badge type="info" text="Not implemented yet" /> | –             |
-| FORECAST.LINEAR          | <Badge type="info" text="Not implemented yet" /> | –             |
+| FORECAST.LINEAR          | <Badge type="tip" text="Available" />            | –             |
 | FREQUENCY                | <Badge type="info" text="Not implemented yet" /> | –             |
 | GAMMA                    | <Badge type="tip" text="Available" />            | –             |
 | GAMMA.DIST               | <Badge type="tip" text="Available" />            | –             |

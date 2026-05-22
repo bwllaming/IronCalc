@@ -6,7 +6,4 @@ lang: en-US
 
 # FORECAST.LINEAR
 
-::: warning
-🚧 This function is not yet available in IronCalc.
-[Follow development here](https://github.com/ironcalc/IronCalc/labels/Functions)
-:::
+Returns a predicted value along a linear trend.

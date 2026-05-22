@@ -150,6 +150,88 @@ impl<'a> Model<'a> {
         CalcResult::Number(intercept)
     }
 
+    // FORECAST.LINEAR(x, known_y's, known_x's) - Returns a predicted value on the linear trend
+    pub(crate) fn fn_forecast_linear(
+        &mut self,
+        args: &[Node],
+        cell: CellReferenceIndex,
+    ) -> CalcResult {
+        if args.len() != 3 {
+            return CalcResult::new_error(
+                Error::NA,
+                cell,
+                "FORECAST.LINEAR requires three arguments".to_string(),
+            );
+        }
+
+        let x = match self.evaluate_node_in_context(&args[0], cell) {
+            CalcResult::Number(value) => value,
+            CalcResult::Error {
+                error,
+                origin,
+                message,
+            } => {
+                return CalcResult::Error {
+                    error,
+                    origin,
+                    message,
+                }
+            }
+            _ => {
+                return CalcResult::new_error(
+                    Error::VALUE,
+                    cell,
+                    "FORECAST.LINEAR x argument must be numeric".to_string(),
+                )
+            }
+        };
+
+        let (_rows, _cols, values_y, values_x) = match self.fn_get_two_matrices(&args[1..], cell) {
+            Ok(s) => s,
+            Err(e) => return e,
+        };
+
+        let mut n = 0.0;
+        let mut sum_x = 0.0;
+        let mut sum_y = 0.0;
+        let mut sum_x2 = 0.0;
+        let mut sum_xy = 0.0;
+
+        let len = values_y.len().min(values_x.len());
+        for i in 0..len {
+            if let (Some(y), Some(x_value)) = (values_y[i], values_x[i]) {
+                n += 1.0;
+                sum_x += x_value;
+                sum_y += y;
+                sum_x2 += x_value * x_value;
+                sum_xy += x_value * y;
+            }
+        }
+
+        if n < 2.0 {
+            return CalcResult::new_error(
+                Error::DIV,
+                cell,
+                "FORECAST.LINEAR requires at least two numeric data points".to_string(),
+            );
+        }
+
+        let denom = n * sum_x2 - sum_x * sum_x;
+        if denom == 0.0 || !denom.is_finite() {
+            return CalcResult::new_error(
+                Error::DIV,
+                cell,
+                "Division by zero in FORECAST.LINEAR".to_string(),
+            );
+        }
+
+        let num = n * sum_xy - sum_x * sum_y;
+        let slope = num / denom;
+        let intercept = (sum_y - slope * sum_x) / n;
+
+        CalcResult::Number(intercept + slope * x)
+    }
+
     // STEYX(known_y's, known_x's) - Returns the standard error of the predicted y-values
     pub(crate) fn fn_steyx(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
         let (_rows, _cols, values_y, values_x) = match self.fn_get_two_matrices(args, cell) {

@@ -207,6 +207,19 @@ for Conductor's IronCalc adapter evidence.
   - Classifies `PERCENTRANK.EXC` as vector-plus-scalar input with optional
     scalar significance and scalar output.
 
+## FORECAST.LINEAR Statistical Formula
+
+- `base/src/functions/mod.rs`
+  - Registers the English `FORECAST.LINEAR` / `_xlfn.FORECAST.LINEAR`
+    function name for Conductor stat/compat formula evidence without changing
+    localized language payloads.
+- `base/src/functions/statistical/correl.rs`
+  - Adds scalar `FORECAST.LINEAR(x, known_y's, known_x's)` evaluation using
+    the same paired linear-regression accumulators as `SLOPE` and `INTERCEPT`.
+- `base/src/expressions/parser/static_analysis.rs`
+  - Classifies `FORECAST.LINEAR` as scalar-plus-two-vector input with scalar
+    output.
+
 ## PROB Statistical Formula
 
 - `base/src/functions/mod.rs`
