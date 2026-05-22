@@ -149,6 +149,19 @@ for Conductor's IronCalc adapter evidence.
 - `base/src/expressions/parser/static_analysis.rs`
   - Classifies `PERMUT` as two scalar inputs with scalar output.
 
+## PERCENTRANK.EXC Statistical Formula
+
+- `base/src/functions/mod.rs`
+  - Registers the English `PERCENTRANK.EXC` function name for Conductor formula
+    expansion evidence without changing localized language payloads.
+- `base/src/functions/statistical/count_and_average.rs`
+  - Adds scalar `PERCENTRANK.EXC(array, x, [significance])` evaluation using
+    Excel's exclusive percent-rank interpolation and checked `#N/A`/`#NUM!`
+    error postures.
+- `base/src/expressions/parser/static_analysis.rs`
+  - Classifies `PERCENTRANK.EXC` as vector-plus-scalar input with optional
+    scalar significance and scalar output.
+
 ## MINVERSE Matrix Formula
 
 - `fork/sheets-engine/src/lib.rs`

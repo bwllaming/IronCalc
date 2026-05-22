@@ -271,7 +271,7 @@ pub enum Function {
     Pearson,
     PercentileExc,
     PercentileInc,
-    // PercentrankExc,
+    PercentrankExc,
     // PercentrankInc,
     // Permut,
     Permutationa,
@@ -477,6 +477,9 @@ macro_rules! impl_function_lookup {
                 }
                 if key == "PERMUT" {
                     return Some(Function::Permut);
+                }
+                if key == "PERCENTRANK.EXC" {
+                    return Some(Function::PercentrankExc);
                 }
                 if key == "PROPER" {
                     return Some(Function::Proper);
@@ -1128,6 +1131,7 @@ impl Function {
             Function::Pearson => functions.pearson.clone(),
             Function::PercentileInc => "_xlfn.PERCENTILE.INC".to_string(),
             Function::PercentileExc => "PERCENTILE.EXC".to_string(),
+            Function::PercentrankExc => "PERCENTRANK.EXC".to_string(),
             Function::Permutationa => "_xlfn.PERMUTATIONA".to_string(),
             Function::Phi => functions.phi.clone(),
             Function::PoissonDist => functions.poissondist.clone(),
@@ -1281,7 +1285,7 @@ impl Function {
             Function::Steyx => functions.steyx.clone(),
         }
     }
-    pub fn into_iter() -> IntoIter<Function, 375> {
+    pub fn into_iter() -> IntoIter<Function, 376> {
         [
             Function::And,
             Function::False,
@@ -1619,6 +1623,7 @@ impl Function {
             Function::Pearson,
             Function::PercentileExc,
             Function::PercentileInc,
+            Function::PercentrankExc,
             Function::Permutationa,
             Function::Phi,
             Function::PoissonDist,
@@ -1782,6 +1787,7 @@ impl Function {
             Function::NormSInv => "_xlfn.NORM.S.INV".to_string(),
 
             Function::PercentileInc => "_xlfn.PERCENTILE.INC".to_string(),
+            Function::PercentrankExc => "_xlfn.PERCENTRANK.EXC".to_string(),
             Function::Permutationa => "_xlfn.PERMUTATIONA".to_string(),
             Function::Phi => "_xlfn.PHI".to_string(),
 
@@ -2173,6 +2179,7 @@ impl<'a> Model<'a> {
             Function::Pearson => self.fn_pearson(args, cell),
             Function::PercentileExc => self.fn_percentile_exc(args, cell),
             Function::PercentileInc => self.fn_percentile_inc(args, cell),
+            Function::PercentrankExc => self.fn_percentrank_exc(args, cell),
             Function::Permutationa => self.fn_permutationa(args, cell),
             Function::Phi => self.fn_phi(args, cell),
             Function::PoissonDist => self.fn_poisson_dist(args, cell),

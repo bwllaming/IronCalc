@@ -763,6 +763,94 @@ impl<'a> Model<'a> {
         )
     }
 
+    pub(crate) fn fn_percentrank_exc(
+        &mut self,
+        args: &[Node],
+        cell: CellReferenceIndex,
+    ) -> CalcResult {
+        if args.len() != 2 && args.len() != 3 {
+            return CalcResult::new_args_number_error(cell);
+        }
+
+        let x = match self.get_number_no_bools(&args[1], cell) {
+            Ok(value) => value,
+            Err(error) => return error,
+        };
+        let significance = if args.len() == 3 {
+            match self.get_number_no_bools(&args[2], cell) {
+                Ok(value) => value,
+                Err(error) => return error,
+            }
+        } else {
+            3.0
+        };
+        if significance < 1.0 {
+            return CalcResult::Error {
+                error: Error::NUM,
+                origin: cell,
+                message: "PERCENTRANK.EXC significance must be at least 1".to_string(),
+            };
+        }
+
+        let mut values = Vec::new();
+        if let Err(error) = self.for_each_value(&args[0..1], cell, |value| values.push(value)) {
+            return error;
+        }
+        if values.is_empty() {
+            return CalcResult::Error {
+                error: Error::NUM,
+                origin: cell,
+                message: "No numeric values for PERCENTRANK.EXC".to_string(),
+            };
+        }
+
+        values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+        if x < values[0] || x > values[values.len() - 1] {
+            return CalcResult::Error {
+                error: Error::NA,
+                origin: cell,
+                message: "PERCENTRANK.EXC x value is outside the array bounds".to_string(),
+            };
+        }
+
+        let n = values.len() as f64;
+        let rank = match values
+            .iter()
+            .position(|value| (*value - x).abs() <= f64::EPSILON)
+        {
+            Some(index) => (index as f64 + 1.0) / (n + 1.0),
+            None => {
+                let upper_index = match values.iter().position(|value| *value > x) {
+                    Some(index) => index,
+                    None => {
+                        return CalcResult::Error {
+                            error: Error::NA,
+                            origin: cell,
+                            message: "PERCENTRANK.EXC x value is outside the array bounds"
+                                .to_string(),
+                        }
+                    }
+                };
+                let lower_index = upper_index - 1;
+                let lower_value = values[lower_index];
+                let upper_value = values[upper_index];
+                if (upper_value - lower_value).abs() <= f64::EPSILON {
+                    (lower_index as f64 + 1.0) / (n + 1.0)
+                } else {
+                    let lower_rank = (lower_index as f64 + 1.0) / (n + 1.0);
+                    let upper_rank = (upper_index as f64 + 1.0) / (n + 1.0);
+                    lower_rank
+                        + (x - lower_value) / (upper_value - lower_value)
+                            * (upper_rank - lower_rank)
+                }
+            }
+        };
+
+        let digits = significance.trunc().clamp(1.0, 15.0) as i32;
+        let scale = 10_f64.powi(digits);
+        CalcResult::Number((rank * scale).round() / scale)
+    }
+
     pub(crate) fn fn_harmean(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
         if args.is_empty() {
             return CalcResult::new_args_number_error(cell);
