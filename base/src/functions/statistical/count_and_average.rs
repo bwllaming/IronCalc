@@ -719,6 +719,49 @@ impl<'a> Model<'a> {
         }
     }
 
+    pub(crate) fn fn_mode_sngl(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
+        if args.is_empty() {
+            return CalcResult::new_args_number_error(cell);
+        }
+
+        let mut values: Vec<f64> = Vec::new();
+        if let Err(e) = self.for_each_value(args, cell, |f| values.push(f)) {
+            return e;
+        }
+
+        if values.len() < 2 {
+            return CalcResult::Error {
+                error: Error::NA,
+                origin: cell,
+                message: "MODE.SNGL requires at least one duplicate numeric value".to_string(),
+            };
+        }
+
+        let mut best_value = values[0];
+        let mut best_count = 1usize;
+        for (index, value) in values.iter().copied().enumerate() {
+            let count = values
+                .iter()
+                .take(index + 1)
+                .filter(|candidate| **candidate == value)
+                .count();
+            if count > best_count {
+                best_value = value;
+                best_count = count;
+            }
+        }
+
+        if best_count < 2 {
+            return CalcResult::Error {
+                error: Error::NA,
+                origin: cell,
+                message: "MODE.SNGL requires at least one duplicate numeric value".to_string(),
+            };
+        }
+
+        CalcResult::Number(best_value)
+    }
+
     pub(crate) fn fn_maxa(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
         if args.is_empty() {
             return CalcResult::new_args_number_error(cell);

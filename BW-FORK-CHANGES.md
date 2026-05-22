@@ -89,6 +89,19 @@ for Conductor's IronCalc adapter evidence.
 - `base/src/expressions/parser/static_analysis.rs`
   - Classifies `QUARTILE` as vector-plus-scalar input with scalar output.
 
+## MODE.SNGL Statistical Formula
+
+- `base/src/functions/mod.rs`
+  - Registers the English `_xlfn.MODE.SNGL` / `MODE.SNGL` function name for
+    Conductor stat/compat formula evidence without changing localized language
+    payloads.
+- `base/src/functions/statistical/count_and_average.rs`
+  - Adds scalar `MODE.SNGL(number1, [number2], ...)` evaluation over numeric
+    scalar, array, and range inputs, returning `#N/A` when no duplicate numeric
+    value exists.
+- `base/src/expressions/parser/static_analysis.rs`
+  - Classifies `MODE.SNGL` as vector input with scalar output.
+
 ## MINVERSE Matrix Formula
 
 - `fork/sheets-engine/src/lib.rs`

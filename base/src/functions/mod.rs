@@ -261,7 +261,7 @@ pub enum Function {
     Median,
     MinA,
     // ModeMult,
-    // ModeSingl,
+    ModeSingl,
     NegbinomDist,
     NormDist,
     NormInv,
@@ -470,6 +470,9 @@ macro_rules! impl_function_lookup {
                 }
                 if key == "REPLACE" {
                     return Some(Function::Replace);
+                }
+                if key == "MODE.SNGL" || key == "_XLFN.MODE.SNGL" {
+                    return Some(Function::ModeSingl);
                 }
                 $(
                     if self.$field == key {
@@ -1102,6 +1105,7 @@ impl Function {
             Function::MaxA => functions.maxa.clone(),
             Function::Median => functions.median.clone(),
             Function::MinA => functions.mina.clone(),
+            Function::ModeSingl => "MODE.SNGL".to_string(),
             Function::NegbinomDist => functions.negbinomdist.clone(),
             Function::NormDist => functions.normdist.clone(),
             Function::NormInv => functions.norminv.clone(),
@@ -1260,7 +1264,7 @@ impl Function {
             Function::Steyx => functions.steyx.clone(),
         }
     }
-    pub fn into_iter() -> IntoIter<Function, 370> {
+    pub fn into_iter() -> IntoIter<Function, 371> {
         [
             Function::And,
             Function::False,
@@ -1622,6 +1626,7 @@ impl Function {
             Function::Steyx,
             Function::Large,
             Function::Median,
+            Function::ModeSingl,
             Function::Small,
             Function::RankAvg,
             Function::RankEq,
@@ -1759,6 +1764,7 @@ impl Function {
 
             Function::PoissonDist => "_xlfn.POISSON.DIST".to_string(),
 
+            Function::ModeSingl => "_xlfn.MODE.SNGL".to_string(),
             Function::StDevP => "_xlfn.STDEV.P".to_string(),
             Function::StDevS => "_xlfn.STDEV.S".to_string(),
 
@@ -2173,6 +2179,7 @@ impl<'a> Model<'a> {
             Function::Harmean => self.fn_harmean(args, cell),
             Function::Kurt => self.fn_kurt(args, cell),
             Function::Large => self.fn_large(args, cell),
+            Function::ModeSingl => self.fn_mode_sngl(args, cell),
             Function::MaxA => self.fn_maxa(args, cell),
             Function::Median => self.fn_median(args, cell),
             Function::MinA => self.fn_mina(args, cell),
