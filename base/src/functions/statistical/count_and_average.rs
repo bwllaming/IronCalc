@@ -653,6 +653,31 @@ impl<'a> Model<'a> {
         )
     }
 
+    pub(crate) fn fn_quartile_exc(
+        &mut self,
+        args: &[Node],
+        cell: CellReferenceIndex,
+    ) -> CalcResult {
+        if args.len() != 2 {
+            return CalcResult::new_args_number_error(cell);
+        }
+
+        let quart = match self.get_number_no_bools(&args[1], cell) {
+            Ok(value) => value.trunc(),
+            Err(error) => return error,
+        };
+        if !(1.0..=3.0).contains(&quart) {
+            return CalcResult::Error {
+                error: Error::NUM,
+                origin: cell,
+                message: "QUARTILE.EXC quart argument must be between 1 and 3".to_string(),
+            };
+        }
+
+        let percentile_arg = Node::NumberKind(quart / 4.0);
+        self.fn_percentile_exc(&[args[0].clone(), percentile_arg], cell)
+    }
+
     pub(crate) fn fn_percentile_inc(
         &mut self,
         args: &[Node],

@@ -89,6 +89,17 @@ for Conductor's IronCalc adapter evidence.
 - `base/src/expressions/parser/static_analysis.rs`
   - Classifies `QUARTILE` as vector-plus-scalar input with scalar output.
 
+## QUARTILE.EXC Statistical Formula
+
+- `base/src/functions/mod.rs`
+  - Registers the English `QUARTILE.EXC` function name for Conductor
+    stat/compat formula evidence without changing localized language payloads.
+- `base/src/functions/statistical/count_and_average.rs`
+  - Adds scalar `QUARTILE.EXC(array, quart)` evaluation by delegating quartile
+    positions 1 through 3 to Excel's exclusive percentile interpolation.
+- `base/src/expressions/parser/static_analysis.rs`
+  - Classifies `QUARTILE.EXC` as vector-plus-scalar input with scalar output.
+
 ## MODE.SNGL Statistical Formula
 
 - `base/src/functions/mod.rs`

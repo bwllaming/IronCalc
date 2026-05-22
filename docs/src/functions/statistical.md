@@ -93,7 +93,7 @@ You can track the progress in this [GitHub issue](https://github.com/ironcalc/Ir
 | PHI                      | <Badge type="tip" text="Available" />            | –             |
 | POISSON.DIST             | <Badge type="tip" text="Available" />            | –             |
 | PROB                     | <Badge type="info" text="Not implemented yet" /> | –             |
-| QUARTILE.EXC             | <Badge type="info" text="Not implemented yet" /> | –             |
+| QUARTILE.EXC             | <Badge type="tip" text="Available" />            | –             |
 | QUARTILE.INC             | <Badge type="info" text="Not implemented yet" /> | –             |
 | RANK.AVG                 | <Badge type="tip" text="Available" />            | –             |
 | RANK.EQ                  | <Badge type="tip" text="Available" />            | –             |

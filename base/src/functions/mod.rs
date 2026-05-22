@@ -279,7 +279,7 @@ pub enum Function {
     PoissonDist,
     Prob,
     Quartile,
-    // QuartileExc,
+    QuartileExc,
     // QuartileInc,
     RankAvg,
     RankEq,
@@ -465,6 +465,9 @@ macro_rules! impl_function_lookup {
                 }
                 if key == "QUARTILE" {
                     return Some(Function::Quartile);
+                }
+                if key == "QUARTILE.EXC" {
+                    return Some(Function::QuartileExc);
                 }
                 if key == "_XLFN.PERCENTILE.INC" {
                     return Some(Function::PercentileInc);
@@ -1144,6 +1147,7 @@ impl Function {
             Function::PoissonDist => functions.poissondist.clone(),
             Function::Prob => "PROB".to_string(),
             Function::Quartile => "QUARTILE".to_string(),
+            Function::QuartileExc => "QUARTILE.EXC".to_string(),
             Function::RankAvg => functions.rankavg.clone(),
             Function::RankEq => functions.rankeq.clone(),
             Function::Skew => functions.skew.clone(),
@@ -1293,7 +1297,7 @@ impl Function {
             Function::Steyx => functions.steyx.clone(),
         }
     }
-    pub fn into_iter() -> IntoIter<Function, 378> {
+    pub fn into_iter() -> IntoIter<Function, 379> {
         [
             Function::And,
             Function::False,
@@ -1638,6 +1642,7 @@ impl Function {
             Function::PoissonDist,
             Function::Prob,
             Function::Quartile,
+            Function::QuartileExc,
             Function::Standardize,
             Function::StDevP,
             Function::StDevS,
@@ -2197,6 +2202,7 @@ impl<'a> Model<'a> {
             Function::PoissonDist => self.fn_poisson_dist(args, cell),
             Function::Prob => self.fn_prob(args, cell),
             Function::Quartile => self.fn_quartile(args, cell),
+            Function::QuartileExc => self.fn_quartile_exc(args, cell),
             Function::Standardize => self.fn_standardize(args, cell),
             Function::StDevP => self.fn_stdev_p(args, cell),
             Function::StDevS => self.fn_stdev_s(args, cell),
