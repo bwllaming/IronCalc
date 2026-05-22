@@ -1120,7 +1120,6 @@ impl Function {
             Function::Pearson => functions.pearson.clone(),
             Function::PercentileInc => "_xlfn.PERCENTILE.INC".to_string(),
             Function::PercentileExc => "PERCENTILE.EXC".to_string(),
-            Function::PercentileInc => "_xlfn.PERCENTILE.INC".to_string(),
             Function::Phi => functions.phi.clone(),
             Function::PoissonDist => functions.poissondist.clone(),
             Function::Quartile => "QUARTILE".to_string(),
@@ -1273,7 +1272,7 @@ impl Function {
             Function::Steyx => functions.steyx.clone(),
         }
     }
-    pub fn into_iter() -> IntoIter<Function, 371> {
+    pub fn into_iter() -> IntoIter<Function, 373> {
         [
             Function::And,
             Function::False,
