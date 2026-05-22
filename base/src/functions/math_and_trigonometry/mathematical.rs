@@ -1341,4 +1341,30 @@ impl<'a> Model<'a> {
         }
         CalcResult::Number(result)
     }
+
+    pub(crate) fn fn_permutationa(
+        &mut self,
+        args: &[Node],
+        cell: CellReferenceIndex,
+    ) -> CalcResult {
+        if args.len() != 2 {
+            return CalcResult::new_args_number_error(cell);
+        }
+        let number = match self.get_number(&args[0], cell) {
+            Ok(f) => f.floor(),
+            Err(s) => return s,
+        };
+        let chosen = match self.get_number(&args[1], cell) {
+            Ok(f) => f.floor(),
+            Err(s) => return s,
+        };
+        if number < 0.0 || chosen < 0.0 {
+            return CalcResult::Error {
+                error: Error::NUM,
+                origin: cell,
+                message: "Arguments must be non-negative integers".to_string(),
+            };
+        }
+        CalcResult::Number(number.powf(chosen))
+    }
 }

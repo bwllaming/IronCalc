@@ -126,6 +126,18 @@ for Conductor's IronCalc adapter evidence.
 - `base/src/expressions/parser/static_analysis.rs`
   - Classifies `PERCENTILE.EXC` as vector-plus-scalar input with scalar output.
 
+## PERMUTATIONA Statistical Formula
+
+- `base/src/functions/mod.rs`
+  - Registers `_xlfn.PERMUTATIONA` for Conductor stat/compat formula evidence
+    while leaving unprefixed `PERMUTATIONA` unresolved to match Excel's checked
+    OOXML `#NAME?` posture.
+- `base/src/functions/math_and_trigonometry/mathematical.rs`
+  - Adds scalar `PERMUTATIONA(number, number_chosen)` evaluation for
+    non-negative numeric arguments using Excel-style integer truncation.
+- `base/src/expressions/parser/static_analysis.rs`
+  - Classifies `_xlfn.PERMUTATIONA` as two scalar inputs with scalar output.
+
 ## MINVERSE Matrix Formula
 
 - `fork/sheets-engine/src/lib.rs`
