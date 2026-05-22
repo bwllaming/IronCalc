@@ -175,6 +175,19 @@ for Conductor's IronCalc adapter evidence.
   - Classifies `PERCENTRANK.EXC` as vector-plus-scalar input with optional
     scalar significance and scalar output.
 
+## PROB Statistical Formula
+
+- `base/src/functions/mod.rs`
+  - Registers the English `PROB` function name for Conductor formula expansion
+    evidence without changing localized language payloads.
+- `base/src/functions/statistical/count_and_average.rs`
+  - Adds scalar `PROB(x_range, prob_range, lower_limit, [upper_limit])`
+    evaluation over numeric range and array inputs, with checked probability
+    sum and shape errors.
+- `base/src/expressions/parser/static_analysis.rs`
+  - Classifies `PROB` as vector probability inputs plus scalar limits with
+    scalar output.
+
 ## MINVERSE Matrix Formula
 
 - `fork/sheets-engine/src/lib.rs`

@@ -937,6 +937,148 @@ impl<'a> Model<'a> {
         CalcResult::Number((rank * scale).round() / scale)
     }
 
+    pub(crate) fn fn_prob(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
+        if !(3..=4).contains(&args.len()) {
+            return CalcResult::new_args_number_error(cell);
+        }
+
+        let x_values = match self.prob_range_values(&args[0], cell, "x_range") {
+            Ok(values) => values,
+            Err(error) => return error,
+        };
+        let probabilities = match self.prob_range_values(&args[1], cell, "prob_range") {
+            Ok(values) => values,
+            Err(error) => return error,
+        };
+        if x_values.len() != probabilities.len() {
+            return CalcResult::Error {
+                error: Error::NA,
+                origin: cell,
+                message: "PROB x_range and prob_range must have the same shape".to_string(),
+            };
+        }
+        if probabilities.is_empty() {
+            return CalcResult::Error {
+                error: Error::NA,
+                origin: cell,
+                message: "PROB requires at least one probability".to_string(),
+            };
+        }
+        if probabilities
+            .iter()
+            .any(|probability| *probability <= 0.0 || *probability > 1.0)
+        {
+            return CalcResult::Error {
+                error: Error::NUM,
+                origin: cell,
+                message: "PROB probabilities must be greater than 0 and no more than 1".to_string(),
+            };
+        }
+
+        let probability_sum = probabilities.iter().sum::<f64>();
+        if (probability_sum - 1.0).abs() > 1e-12 {
+            return CalcResult::Error {
+                error: Error::NUM,
+                origin: cell,
+                message: "PROB probabilities must sum to 1".to_string(),
+            };
+        }
+
+        let lower_limit = match self.get_number_no_bools(&args[2], cell) {
+            Ok(value) => value,
+            Err(error) => return error,
+        };
+        let upper_limit = if let Some(upper_arg) = args.get(3) {
+            match self.get_number_no_bools(upper_arg, cell) {
+                Ok(value) => value,
+                Err(error) => return error,
+            }
+        } else {
+            lower_limit
+        };
+
+        let result = x_values
+            .iter()
+            .zip(probabilities.iter())
+            .filter(|(x, _)| **x >= lower_limit && **x <= upper_limit)
+            .map(|(_, probability)| *probability)
+            .sum::<f64>();
+        CalcResult::Number(result)
+    }
+
+    fn prob_range_values(
+        &mut self,
+        arg: &Node,
+        cell: CellReferenceIndex,
+        label: &str,
+    ) -> Result<Vec<f64>, CalcResult> {
+        match self.evaluate_node_in_context(arg, cell) {
+            CalcResult::Number(value) => Ok(vec![value]),
+            CalcResult::Range { left, right } => {
+                if left.sheet != right.sheet {
+                    return Err(CalcResult::new_error(
+                        Error::VALUE,
+                        cell,
+                        "Ranges are in different sheets".to_string(),
+                    ));
+                }
+
+                let mut values = Vec::new();
+                for row in left.row..=right.row {
+                    for column in left.column..=right.column {
+                        match self.evaluate_cell(CellReferenceIndex {
+                            sheet: left.sheet,
+                            row,
+                            column,
+                        }) {
+                            CalcResult::Number(value) => values.push(value),
+                            error @ CalcResult::Error { .. } => return Err(error),
+                            _ => {
+                                return Err(CalcResult::new_error(
+                                    Error::VALUE,
+                                    cell,
+                                    format!("PROB {label} must be numeric"),
+                                ));
+                            }
+                        }
+                    }
+                }
+                Ok(values)
+            }
+            CalcResult::Array(array) => {
+                let mut values = Vec::new();
+                for row in array {
+                    for value in row {
+                        match value {
+                            ArrayNode::Number(value) => values.push(value),
+                            ArrayNode::Error(error) => {
+                                return Err(CalcResult::Error {
+                                    error,
+                                    origin: cell,
+                                    message: "Error in array".to_string(),
+                                });
+                            }
+                            _ => {
+                                return Err(CalcResult::new_error(
+                                    Error::VALUE,
+                                    cell,
+                                    format!("PROB {label} must be numeric"),
+                                ));
+                            }
+                        }
+                    }
+                }
+                Ok(values)
+            }
+            error @ CalcResult::Error { .. } => Err(error),
+            _ => Err(CalcResult::new_error(
+                Error::VALUE,
+                cell,
+                format!("PROB {label} must be numeric"),
+            )),
+        }
+    }
+
     pub(crate) fn fn_harmean(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
         if args.is_empty() {
             return CalcResult::new_args_number_error(cell);

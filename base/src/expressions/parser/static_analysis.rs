@@ -761,6 +761,16 @@ fn args_signature_xnpv(arg_count: usize) -> Vec<Signature> {
     }
 }
 
+fn args_signature_prob(arg_count: usize) -> Vec<Signature> {
+    if !(3..=4).contains(&arg_count) {
+        return vec![Signature::Error; arg_count];
+    }
+    let mut result = vec![Signature::Scalar; arg_count];
+    result[0] = Signature::Vector;
+    result[1] = Signature::Vector;
+    result
+}
+
 // NETWORKDAYS(start_date, end_date, [holidays])
 // Parameters: start_date (scalar), end_date (scalar), holidays (optional vector)
 fn args_signature_networkdays(arg_count: usize) -> Vec<Signature> {
@@ -1162,6 +1172,7 @@ fn get_function_args_signature(kind: &Function, arg_count: usize) -> Vec<Signatu
         }
         Function::Phi => args_signature_scalars(arg_count, 1, 0),
         Function::PoissonDist => args_signature_scalars(arg_count, 3, 0),
+        Function::Prob => args_signature_prob(arg_count),
         Function::Standardize => args_signature_scalars(arg_count, 3, 0),
         Function::StDevP => vec![Signature::Vector; arg_count],
         Function::StDevS => vec![Signature::Vector; arg_count],
@@ -1613,6 +1624,7 @@ fn static_analysis_on_function(kind: &Function, args: &[Node]) -> StaticResult {
         Function::PercentrankInc => StaticResult::Scalar,
         Function::PercentileExc => StaticResult::Scalar,
         Function::PercentrankExc => StaticResult::Scalar,
+        Function::Prob => StaticResult::Scalar,
         Function::Quartile => StaticResult::Scalar,
         Function::RankAvg => StaticResult::Scalar,
         Function::RankEq => StaticResult::Scalar,

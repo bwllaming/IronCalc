@@ -277,7 +277,7 @@ pub enum Function {
     Permutationa,
     Phi,
     PoissonDist,
-    // Prob,
+    Prob,
     Quartile,
     // QuartileExc,
     // QuartileInc,
@@ -483,6 +483,9 @@ macro_rules! impl_function_lookup {
                 }
                 if key == "PERCENTRANK.EXC" {
                     return Some(Function::PercentrankExc);
+                }
+                if key == "PROB" {
+                    return Some(Function::Prob);
                 }
                 if key == "PROPER" {
                     return Some(Function::Proper);
@@ -1139,6 +1142,7 @@ impl Function {
             Function::Permutationa => "_xlfn.PERMUTATIONA".to_string(),
             Function::Phi => functions.phi.clone(),
             Function::PoissonDist => functions.poissondist.clone(),
+            Function::Prob => "PROB".to_string(),
             Function::Quartile => "QUARTILE".to_string(),
             Function::RankAvg => functions.rankavg.clone(),
             Function::RankEq => functions.rankeq.clone(),
@@ -1289,7 +1293,7 @@ impl Function {
             Function::Steyx => functions.steyx.clone(),
         }
     }
-    pub fn into_iter() -> IntoIter<Function, 377> {
+    pub fn into_iter() -> IntoIter<Function, 378> {
         [
             Function::And,
             Function::False,
@@ -1632,6 +1636,7 @@ impl Function {
             Function::PercentrankInc,
             Function::Phi,
             Function::PoissonDist,
+            Function::Prob,
             Function::Quartile,
             Function::Standardize,
             Function::StDevP,
@@ -2190,6 +2195,7 @@ impl<'a> Model<'a> {
             Function::PercentrankInc => self.fn_percentrank_inc(args, cell),
             Function::Phi => self.fn_phi(args, cell),
             Function::PoissonDist => self.fn_poisson_dist(args, cell),
+            Function::Prob => self.fn_prob(args, cell),
             Function::Quartile => self.fn_quartile(args, cell),
             Function::Standardize => self.fn_standardize(args, cell),
             Function::StDevP => self.fn_stdev_p(args, cell),
