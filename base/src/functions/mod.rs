@@ -1311,7 +1311,7 @@ impl Function {
             Function::Steyx => functions.steyx.clone(),
         }
     }
-    pub fn into_iter() -> IntoIter<Function, 381> {
+    pub fn into_iter() -> IntoIter<Function, 382> {
         [
             Function::And,
             Function::False,
