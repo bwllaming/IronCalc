@@ -78,6 +78,14 @@ for Conductor's IronCalc adapter evidence.
     `CalcEngine` returns the checked Excel `#N/A` value while the upstream
     IronCalc function registry remains missing the function.
 
+## FORECAST.ETS.SEASONALITY Statistical Formula
+
+- `fork/sheets-engine/src/lib.rs`
+  - Adds a narrow Conductor adapter extension for the checked unprefixed
+    `FORECAST.ETS.SEASONALITY` stat/compat representative so `CalcEngine`
+    returns Excel's OOXML-compatible `#NAME?` posture while true ETS
+    seasonality semantics remain unimplemented in the fork.
+
 ## QUARTILE Statistical Formula
 
 - `base/src/functions/mod.rs`
