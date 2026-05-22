@@ -1215,6 +1215,13 @@ fn get_function_args_signature(kind: &Function, arg_count: usize) -> Vec<Signatu
         Function::MinA => vec![Signature::Vector; arg_count],
         Function::ModeSingl => vec![Signature::Vector; arg_count],
         Function::PercentileInc => vec![Signature::Vector, Signature::Scalar],
+        Function::PercentrankInc => {
+            if arg_count == 2 {
+                vec![Signature::Vector, Signature::Scalar]
+            } else {
+                vec![Signature::Vector, Signature::Scalar, Signature::Scalar]
+            }
+        }
         Function::PercentileExc => vec![Signature::Vector, Signature::Scalar],
         Function::PercentrankExc => {
             if arg_count == 2 {
@@ -1603,6 +1610,7 @@ fn static_analysis_on_function(kind: &Function, args: &[Node]) -> StaticResult {
         Function::MinA => StaticResult::Scalar,
         Function::ModeSingl => StaticResult::Scalar,
         Function::PercentileInc => StaticResult::Scalar,
+        Function::PercentrankInc => StaticResult::Scalar,
         Function::PercentileExc => StaticResult::Scalar,
         Function::PercentrankExc => StaticResult::Scalar,
         Function::Quartile => StaticResult::Scalar,

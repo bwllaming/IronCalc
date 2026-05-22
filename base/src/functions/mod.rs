@@ -272,7 +272,7 @@ pub enum Function {
     PercentileExc,
     PercentileInc,
     PercentrankExc,
-    // PercentrankInc,
+    PercentrankInc,
     // Permut,
     Permutationa,
     Phi,
@@ -471,6 +471,9 @@ macro_rules! impl_function_lookup {
                 }
                 if key == "_XLFN.PERMUTATIONA" {
                     return Some(Function::Permutationa);
+                }
+                if key == "_XLFN.PERCENTRANK.INC" {
+                    return Some(Function::PercentrankInc);
                 }
                 if key == "PERCENTILE.EXC" {
                     return Some(Function::PercentileExc);
@@ -1130,6 +1133,7 @@ impl Function {
             Function::NormSInv => functions.normsinv.clone(),
             Function::Pearson => functions.pearson.clone(),
             Function::PercentileInc => "_xlfn.PERCENTILE.INC".to_string(),
+            Function::PercentrankInc => "_xlfn.PERCENTRANK.INC".to_string(),
             Function::PercentileExc => "PERCENTILE.EXC".to_string(),
             Function::PercentrankExc => "PERCENTRANK.EXC".to_string(),
             Function::Permutationa => "_xlfn.PERMUTATIONA".to_string(),
@@ -1285,7 +1289,7 @@ impl Function {
             Function::Steyx => functions.steyx.clone(),
         }
     }
-    pub fn into_iter() -> IntoIter<Function, 376> {
+    pub fn into_iter() -> IntoIter<Function, 377> {
         [
             Function::And,
             Function::False,
@@ -1625,6 +1629,7 @@ impl Function {
             Function::PercentileInc,
             Function::PercentrankExc,
             Function::Permutationa,
+            Function::PercentrankInc,
             Function::Phi,
             Function::PoissonDist,
             Function::Quartile,
@@ -1789,6 +1794,7 @@ impl Function {
             Function::PercentileInc => "_xlfn.PERCENTILE.INC".to_string(),
             Function::PercentrankExc => "_xlfn.PERCENTRANK.EXC".to_string(),
             Function::Permutationa => "_xlfn.PERMUTATIONA".to_string(),
+            Function::PercentrankInc => "_xlfn.PERCENTRANK.INC".to_string(),
             Function::Phi => "_xlfn.PHI".to_string(),
 
             Function::PoissonDist => "_xlfn.POISSON.DIST".to_string(),
@@ -2181,6 +2187,7 @@ impl<'a> Model<'a> {
             Function::PercentileInc => self.fn_percentile_inc(args, cell),
             Function::PercentrankExc => self.fn_percentrank_exc(args, cell),
             Function::Permutationa => self.fn_permutationa(args, cell),
+            Function::PercentrankInc => self.fn_percentrank_inc(args, cell),
             Function::Phi => self.fn_phi(args, cell),
             Function::PoissonDist => self.fn_poisson_dist(args, cell),
             Function::Quartile => self.fn_quartile(args, cell),

@@ -704,6 +704,92 @@ impl<'a> Model<'a> {
         )
     }
 
+    pub(crate) fn fn_percentrank_inc(
+        &mut self,
+        args: &[Node],
+        cell: CellReferenceIndex,
+    ) -> CalcResult {
+        if !(2..=3).contains(&args.len()) {
+            return CalcResult::new_args_number_error(cell);
+        }
+
+        let x = match self.get_number_no_bools(&args[1], cell) {
+            Ok(value) => value,
+            Err(error) => return error,
+        };
+        let significance = if args.len() == 3 {
+            match self.get_number_no_bools(&args[2], cell) {
+                Ok(value) => value.trunc(),
+                Err(error) => return error,
+            }
+        } else {
+            3.0
+        };
+        if significance < 1.0 {
+            return CalcResult::Error {
+                error: Error::NUM,
+                origin: cell,
+                message: "PERCENTRANK.INC significance must be at least 1".to_string(),
+            };
+        }
+
+        let mut values = Vec::new();
+        if let Err(error) = self.for_each_value(&args[0..1], cell, |value| values.push(value)) {
+            return error;
+        }
+        if values.is_empty() {
+            return CalcResult::Error {
+                error: Error::NUM,
+                origin: cell,
+                message: "No numeric values for PERCENTRANK.INC".to_string(),
+            };
+        }
+
+        values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+        let first = values[0];
+        let last = values[values.len() - 1];
+        if x < first || x > last {
+            return CalcResult::Error {
+                error: Error::NA,
+                origin: cell,
+                message: "PERCENTRANK.INC x is outside the data bounds".to_string(),
+            };
+        }
+        if values.len() == 1 {
+            return if x == first {
+                CalcResult::Number(1.0)
+            } else {
+                CalcResult::Error {
+                    error: Error::NA,
+                    origin: cell,
+                    message: "PERCENTRANK.INC x is outside the data bounds".to_string(),
+                }
+            };
+        }
+
+        let max_rank = values.len() as f64 - 1.0;
+        let rank = if let Some(index) = values.iter().position(|value| *value == x) {
+            index as f64 / max_rank
+        } else {
+            let mut lower_index = 0usize;
+            for index in 0..values.len() - 1 {
+                if values[index] < x && x < values[index + 1] {
+                    lower_index = index;
+                    break;
+                }
+            }
+            let upper_index = lower_index + 1;
+            let lower = values[lower_index];
+            let upper = values[upper_index];
+            let lower_rank = lower_index as f64 / max_rank;
+            let upper_rank = upper_index as f64 / max_rank;
+            lower_rank + ((x - lower) / (upper - lower)) * (upper_rank - lower_rank)
+        };
+
+        let scale = 10.0_f64.powf(significance);
+        CalcResult::Number((rank * scale).round() / scale)
+    }
+
     pub(crate) fn fn_percentile_exc(
         &mut self,
         args: &[Node],

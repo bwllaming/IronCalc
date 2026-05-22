@@ -113,7 +113,20 @@ for Conductor's IronCalc adapter evidence.
     percentile interpolation for `k` values from 0 through 1.
 - `base/src/expressions/parser/static_analysis.rs`
   - Classifies `_xlfn.PERCENTILE.INC` as vector-plus-scalar input with scalar
-    output.
+  output.
+
+## PERCENTRANK.INC Statistical Formula
+
+- `base/src/functions/mod.rs`
+  - Registers `_xlfn.PERCENTRANK.INC` for Conductor stat/compat formula
+    evidence while leaving unprefixed `PERCENTRANK.INC` unresolved to match
+    Excel's checked OOXML `#NAME?` posture.
+- `base/src/functions/statistical/count_and_average.rs`
+  - Adds scalar `PERCENTRANK.INC(array, x, [significance])` evaluation using
+    Excel's inclusive percent-rank interpolation and significance rounding.
+- `base/src/expressions/parser/static_analysis.rs`
+  - Classifies `_xlfn.PERCENTRANK.INC` as vector-plus-scalar input with scalar
+    output and optional scalar significance.
 
 ## PERCENTILE.EXC Statistical Formula
 
