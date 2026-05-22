@@ -123,6 +123,7 @@ pub enum Function {
     Arabic,
     Combin,
     Combina,
+    Permut,
     Sumsq,
 
     // Information
@@ -473,6 +474,9 @@ macro_rules! impl_function_lookup {
                 }
                 if key == "PERCENTILE.EXC" {
                     return Some(Function::PercentileExc);
+                }
+                if key == "PERMUT" {
+                    return Some(Function::Permut);
                 }
                 if key == "PROPER" {
                     return Some(Function::Proper);
@@ -994,6 +998,7 @@ impl Function {
             Function::Arabic => functions.arabic.clone(),
             Function::Combin => functions.combin.clone(),
             Function::Combina => functions.combina.clone(),
+            Function::Permut => "PERMUT".to_string(),
             Function::Sumsq => functions.sumsq.clone(),
             Function::ErrorType => functions.errortype.clone(),
             Function::Formulatext => functions.formulatext.clone(),
@@ -1276,7 +1281,7 @@ impl Function {
             Function::Steyx => functions.steyx.clone(),
         }
     }
-    pub fn into_iter() -> IntoIter<Function, 374> {
+    pub fn into_iter() -> IntoIter<Function, 375> {
         [
             Function::And,
             Function::False,
@@ -1557,6 +1562,7 @@ impl Function {
             Function::Arabic,
             Function::Combin,
             Function::Combina,
+            Function::Permut,
             Function::Sumsq,
             Function::N,
             Function::Cell,
@@ -2110,6 +2116,7 @@ impl<'a> Model<'a> {
             Function::Arabic => self.fn_arabic(args, cell),
             Function::Combin => self.fn_combin(args, cell),
             Function::Combina => self.fn_combina(args, cell),
+            Function::Permut => self.fn_permut(args, cell),
             Function::Sumsq => self.fn_sumsq(args, cell),
             Function::N => self.fn_n(args, cell),
             Function::Cell => self.fn_cell(args, cell),

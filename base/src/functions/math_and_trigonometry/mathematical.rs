@@ -1367,4 +1367,39 @@ impl<'a> Model<'a> {
         }
         CalcResult::Number(number.powf(chosen))
     }
+
+    pub(crate) fn fn_permut(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
+        if args.len() != 2 {
+            return CalcResult::new_args_number_error(cell);
+        }
+        let n = match self.get_number(&args[0], cell) {
+            Ok(f) => f.floor(),
+            Err(s) => return s,
+        };
+        let k = match self.get_number(&args[1], cell) {
+            Ok(f) => f.floor(),
+            Err(s) => return s,
+        };
+        if n < 0.0 || k < 0.0 {
+            return CalcResult::Error {
+                error: Error::NUM,
+                origin: cell,
+                message: "Arguments must be non-negative integers".to_string(),
+            };
+        }
+        if k > n {
+            return CalcResult::Error {
+                error: Error::NUM,
+                origin: cell,
+                message: "number_chosen cannot be greater than number".to_string(),
+            };
+        }
+        let mut result = 1.0;
+        let mut current = n;
+        for _ in 0..(k as usize) {
+            result *= current;
+            current -= 1.0;
+        }
+        CalcResult::Number(result)
+    }
 }

@@ -138,6 +138,17 @@ for Conductor's IronCalc adapter evidence.
 - `base/src/expressions/parser/static_analysis.rs`
   - Classifies `_xlfn.PERMUTATIONA` as two scalar inputs with scalar output.
 
+## PERMUT Statistical Formula
+
+- `base/src/functions/mod.rs`
+  - Registers the English `PERMUT` function name for Conductor stat/compat
+    formula evidence without changing localized language payloads.
+- `base/src/functions/math_and_trigonometry/mathematical.rs`
+  - Adds scalar `PERMUT(number, number_chosen)` evaluation with Excel-style
+    integer truncation and `#NUM!` bounds checks.
+- `base/src/expressions/parser/static_analysis.rs`
+  - Classifies `PERMUT` as two scalar inputs with scalar output.
+
 ## MINVERSE Matrix Formula
 
 - `fork/sheets-engine/src/lib.rs`
