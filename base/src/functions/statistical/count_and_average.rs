@@ -653,6 +653,57 @@ impl<'a> Model<'a> {
         )
     }
 
+    pub(crate) fn fn_percentile_inc(
+        &mut self,
+        args: &[Node],
+        cell: CellReferenceIndex,
+    ) -> CalcResult {
+        if args.len() != 2 {
+            return CalcResult::new_args_number_error(cell);
+        }
+
+        let k = match self.get_number_no_bools(&args[1], cell) {
+            Ok(value) => value,
+            Err(error) => return error,
+        };
+        if !(0.0..=1.0).contains(&k) {
+            return CalcResult::Error {
+                error: Error::NUM,
+                origin: cell,
+                message: "PERCENTILE.INC k argument must be between 0 and 1".to_string(),
+            };
+        }
+
+        let mut values = Vec::new();
+        if let Err(error) = self.for_each_value(&args[0..1], cell, |value| values.push(value)) {
+            return error;
+        }
+        if values.is_empty() {
+            return CalcResult::Error {
+                error: Error::NUM,
+                origin: cell,
+                message: "No numeric values for PERCENTILE.INC".to_string(),
+            };
+        }
+
+        values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+        if values.len() == 1 {
+            return CalcResult::Number(values[0]);
+        }
+
+        let position = (values.len() as f64 - 1.0) * k;
+        let lower_index = position.floor() as usize;
+        let upper_index = position.ceil() as usize;
+        if lower_index == upper_index {
+            return CalcResult::Number(values[lower_index]);
+        }
+
+        let fraction = position - lower_index as f64;
+        CalcResult::Number(
+            values[lower_index] + (values[upper_index] - values[lower_index]) * fraction,
+        )
+    }
+
     pub(crate) fn fn_harmean(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
         if args.is_empty() {
             return CalcResult::new_args_number_error(cell);

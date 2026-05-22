@@ -102,6 +102,19 @@ for Conductor's IronCalc adapter evidence.
 - `base/src/expressions/parser/static_analysis.rs`
   - Classifies `MODE.SNGL` as vector input with scalar output.
 
+## PERCENTILE.INC Statistical Formula
+
+- `base/src/functions/mod.rs`
+  - Registers `_xlfn.PERCENTILE.INC` for Conductor formula expansion evidence
+    while leaving unprefixed `PERCENTILE.INC` unresolved to match Excel's
+    checked OOXML `#NAME?` posture.
+- `base/src/functions/statistical/count_and_average.rs`
+  - Adds scalar `PERCENTILE.INC(array, k)` evaluation using Excel's inclusive
+    percentile interpolation for `k` values from 0 through 1.
+- `base/src/expressions/parser/static_analysis.rs`
+  - Classifies `_xlfn.PERCENTILE.INC` as vector-plus-scalar input with scalar
+    output.
+
 ## MINVERSE Matrix Formula
 
 - `fork/sheets-engine/src/lib.rs`

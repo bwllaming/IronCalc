@@ -269,7 +269,7 @@ pub enum Function {
     NormSInv,
     Pearson,
     // PercentileExc,
-    // PercentileInc,
+    PercentileInc,
     // PercentrankExc,
     // PercentrankInc,
     // Permut,
@@ -464,6 +464,9 @@ macro_rules! impl_function_lookup {
                 }
                 if key == "QUARTILE" {
                     return Some(Function::Quartile);
+                }
+                if key == "_XLFN.PERCENTILE.INC" {
+                    return Some(Function::PercentileInc);
                 }
                 if key == "PROPER" {
                     return Some(Function::Proper);
@@ -1112,6 +1115,7 @@ impl Function {
             Function::NormSdist => functions.normsdist.clone(),
             Function::NormSInv => functions.normsinv.clone(),
             Function::Pearson => functions.pearson.clone(),
+            Function::PercentileInc => "_xlfn.PERCENTILE.INC".to_string(),
             Function::Phi => functions.phi.clone(),
             Function::PoissonDist => functions.poissondist.clone(),
             Function::Quartile => "QUARTILE".to_string(),
@@ -1599,6 +1603,7 @@ impl Function {
             Function::NormSdist,
             Function::NormSInv,
             Function::Pearson,
+            Function::PercentileInc,
             Function::Phi,
             Function::PoissonDist,
             Function::Quartile,
@@ -1760,6 +1765,7 @@ impl Function {
             Function::NormSdist => "_xlfn.NORM.S.DIST".to_string(),
             Function::NormSInv => "_xlfn.NORM.S.INV".to_string(),
 
+            Function::PercentileInc => "_xlfn.PERCENTILE.INC".to_string(),
             Function::Phi => "_xlfn.PHI".to_string(),
 
             Function::PoissonDist => "_xlfn.POISSON.DIST".to_string(),
@@ -2147,6 +2153,7 @@ impl<'a> Model<'a> {
             Function::NormSdist => self.fn_norm_s_dist(args, cell),
             Function::NormSInv => self.fn_norm_s_inv(args, cell),
             Function::Pearson => self.fn_pearson(args, cell),
+            Function::PercentileInc => self.fn_percentile_inc(args, cell),
             Function::Phi => self.fn_phi(args, cell),
             Function::PoissonDist => self.fn_poisson_dist(args, cell),
             Function::Quartile => self.fn_quartile(args, cell),
