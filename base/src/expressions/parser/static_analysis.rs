@@ -448,6 +448,21 @@ fn args_signature_one_vector(arg_count: usize) -> Vec<Signature> {
     }
 }
 
+fn args_signature_growth(arg_count: usize) -> Vec<Signature> {
+    match arg_count {
+        1 => vec![Signature::Vector],
+        2 => vec![Signature::Vector, Signature::Vector],
+        3 => vec![Signature::Vector, Signature::Vector, Signature::Vector],
+        4 => vec![
+            Signature::Vector,
+            Signature::Vector,
+            Signature::Vector,
+            Signature::Scalar,
+        ],
+        _ => vec![Signature::Error; arg_count],
+    }
+}
+
 fn args_signature_sumif(arg_count: usize) -> Vec<Signature> {
     if arg_count == 2 {
         vec![Signature::Vector, Signature::Scalar]
@@ -1213,6 +1228,7 @@ fn get_function_args_signature(kind: &Function, arg_count: usize) -> Vec<Signatu
         Function::Sumx2py2 => vec![Signature::Vector; 2],
         Function::Sumxmy2 => vec![Signature::Vector; 2],
         Function::Correl => vec![Signature::Vector; 2],
+        Function::Growth => args_signature_growth(arg_count),
         Function::Rsq => vec![Signature::Vector; 2],
         Function::Intercept => vec![Signature::Vector; 2],
         Function::ForecastLinear => vec![Signature::Scalar, Signature::Vector, Signature::Vector],
@@ -1587,6 +1603,7 @@ fn static_analysis_on_function(kind: &Function, args: &[Node]) -> StaticResult {
         Function::NormSdist => StaticResult::Scalar,
         Function::NormSInv => StaticResult::Scalar,
         Function::Pearson => StaticResult::Scalar,
+        Function::Growth => StaticResult::Unknown,
         Function::Phi => StaticResult::Scalar,
         Function::PoissonDist => StaticResult::Scalar,
         Function::Standardize => StaticResult::Scalar,

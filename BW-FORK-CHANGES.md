@@ -250,3 +250,19 @@ for Conductor's IronCalc adapter evidence.
     `INDEX(FREQUENCY(...), row)` scalar extraction so `CalcEngine` can compare
     the checked stat/compat Excel representative and full vertical spill
     output while upstream IronCalc remains missing the function.
+
+## GROWTH Statistical Formula
+
+- `base/src/functions/mod.rs`
+  - Registers the English `GROWTH` function name for Conductor formula
+    expansion evidence without changing localized language payloads.
+- `base/src/functions/statistical/growth.rs`
+  - Adds Excel-compatible one-dimensional exponential regression for
+    `GROWTH(known_y, [known_x], [new_x], [const])`, returning a dynamic array
+    shaped like `new_x`.
+- `base/src/functions/lookup_and_reference/mod.rs`
+  - Allows `INDEX` to select a scalar from dynamic-array expression results so
+    `INDEX(GROWTH(...), row, column)` follows the checked Excel representative.
+- `base/src/expressions/parser/static_analysis.rs`
+  - Classifies `GROWTH` as vector regression inputs plus optional scalar
+    intercept flag with dynamic-array output.

@@ -250,6 +250,7 @@ pub enum Function {
     GammaLn,
     GammaLnPrecise,
     Gauss,
+    Growth,
     Harmean,
     HypGeomDist,
     Kurt,
@@ -505,6 +506,9 @@ macro_rules! impl_function_lookup {
                 }
                 if key == "FORECAST.LINEAR" || key == "_XLFN.FORECAST.LINEAR" {
                     return Some(Function::ForecastLinear);
+                }
+                if key == "GROWTH" {
+                    return Some(Function::Growth);
                 }
                 $(
                     if self.$field == key {
@@ -1129,6 +1133,7 @@ impl Function {
             Function::GammaLn => functions.gammaln.clone(),
             Function::GammaLnPrecise => functions.gammalnprecise.clone(),
             Function::Gauss => functions.gauss.clone(),
+            Function::Growth => "GROWTH".to_string(),
             Function::Harmean => functions.harmean.clone(),
             Function::HypGeomDist => functions.hypgeomdist.clone(),
             Function::Kurt => functions.kurt.clone(),
@@ -1686,6 +1691,7 @@ impl Function {
             Function::SkewP,
             Function::Harmean,
             Function::Gauss,
+            Function::Growth,
             Function::Kurt,
             Function::MaxA,
             Function::MinA,
@@ -1817,6 +1823,7 @@ impl Function {
             Function::Permutationa => "_xlfn.PERMUTATIONA".to_string(),
             Function::PercentrankInc => "_xlfn.PERCENTRANK.INC".to_string(),
             Function::Phi => "_xlfn.PHI".to_string(),
+            Function::Growth => "GROWTH".to_string(),
 
             Function::PoissonDist => "_xlfn.POISSON.DIST".to_string(),
             Function::QuartileInc => "_xlfn.QUARTILE.INC".to_string(),
@@ -2243,6 +2250,7 @@ impl<'a> Model<'a> {
             Function::Slope => self.fn_slope(args, cell),
             Function::Steyx => self.fn_steyx(args, cell),
             Function::Gauss => self.fn_gauss(args, cell),
+            Function::Growth => self.fn_growth(args, cell),
             Function::Harmean => self.fn_harmean(args, cell),
             Function::Kurt => self.fn_kurt(args, cell),
             Function::Large => self.fn_large(args, cell),

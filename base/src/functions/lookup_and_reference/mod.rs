@@ -1,8 +1,14 @@
 use crate::constants::{LAST_COLUMN, LAST_ROW};
-use crate::expressions::types::CellReferenceIndex;
 use crate::{
-    calc_result::CalcResult, expressions::parser::Node, expressions::token::Error,
-    expressions::utils::number_to_column, model::Model, utils::ParsedReference,
+    calc_result::CalcResult,
+    expressions::utils::number_to_column,
+    expressions::{
+        parser::{ArrayNode, Node},
+        token::Error,
+        types::CellReferenceIndex,
+    },
+    model::Model,
+    utils::ParsedReference,
 };
 
 use super::util::{compare_values, from_wildcard_to_regex, result_matches_regex, values_are_equal};
@@ -10,6 +16,57 @@ use super::util::{compare_values, from_wildcard_to_regex, result_matches_regex, 
 mod drop_take;
 mod tocol_torow;
 mod transpose;
+
+fn index_array_coordinates(
+    array: &[Vec<ArrayNode>],
+    row_num: f64,
+    col_num: f64,
+    cell: CellReferenceIndex,
+) -> Result<(usize, usize), CalcResult> {
+    let rows = array.len();
+    let columns = array.first().map_or(0, Vec::len);
+    if rows == 0 || columns == 0 || array.iter().any(|row| row.len() != columns) {
+        return Err(CalcResult::Error {
+            error: Error::REF,
+            origin: cell,
+            message: "Wrong reference".to_string(),
+        });
+    }
+
+    let (row_index, column_index) = if (col_num + 1.0).abs() < f64::EPSILON {
+        if rows == 1 {
+            (0, row_num as usize - 1)
+        } else {
+            (row_num as usize - 1, 0)
+        }
+    } else {
+        (row_num as usize - 1, col_num as usize - 1)
+    };
+
+    if row_index >= rows || column_index >= columns {
+        return Err(CalcResult::Error {
+            error: Error::REF,
+            origin: cell,
+            message: "Wrong reference".to_string(),
+        });
+    }
+
+    Ok((row_index, column_index))
+}
+
+fn array_node_to_calc_result(node: &ArrayNode, cell: CellReferenceIndex) -> CalcResult {
+    match node {
+        ArrayNode::Number(value) => CalcResult::Number(*value),
+        ArrayNode::Boolean(value) => CalcResult::Boolean(*value),
+        ArrayNode::String(value) => CalcResult::String(value.clone()),
+        ArrayNode::Error(error) => CalcResult::Error {
+            error: error.clone(),
+            origin: cell,
+            message: "".to_string(),
+        },
+        ArrayNode::Empty => CalcResult::EmptyCell,
+    }
+}
 
 impl<'a> Model<'a> {
     pub(crate) fn fn_index(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
@@ -95,6 +152,13 @@ impl<'a> Model<'a> {
                     row,
                     column,
                 })
+            }
+            CalcResult::Array(array) => {
+                let (row, column) = match index_array_coordinates(&array, row_num, col_num, cell) {
+                    Ok(coordinates) => coordinates,
+                    Err(error) => return error,
+                };
+                array_node_to_calc_result(&array[row][column], cell)
             }
             error @ CalcResult::Error { .. } => error,
             _ => CalcResult::Error {

@@ -10,6 +10,7 @@ mod fisher;
 mod gamma;
 mod gauss;
 mod geomean;
+mod growth;
 mod hypegeom;
 mod if_ifs;
 mod log_normal;
