@@ -241,3 +241,12 @@ for Conductor's IronCalc adapter evidence.
     extraction so `CalcEngine` can compare the checked Excel expansion
     representative and full spill output while upstream IronCalc remains
     missing the function.
+
+## FREQUENCY Statistical Formula
+
+- `fork/sheets-engine/src/lib.rs`
+  - Adds a narrow Conductor adapter extension for bounded local-reference
+    `FREQUENCY(data_array, bins_array)` evaluation and
+    `INDEX(FREQUENCY(...), row)` scalar extraction so `CalcEngine` can compare
+    the checked stat/compat Excel representative and full vertical spill
+    output while upstream IronCalc remains missing the function.
