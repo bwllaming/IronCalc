@@ -100,6 +100,19 @@ for Conductor's IronCalc adapter evidence.
 - `base/src/expressions/parser/static_analysis.rs`
   - Classifies `QUARTILE.EXC` as vector-plus-scalar input with scalar output.
 
+## QUARTILE.INC Statistical Formula
+
+- `base/src/functions/mod.rs`
+  - Registers `_xlfn.QUARTILE.INC` for Conductor stat/compat formula evidence
+    while leaving unprefixed `QUARTILE.INC` unresolved to match Excel's checked
+    OOXML `#NAME?` posture.
+- `base/src/functions/statistical/count_and_average.rs`
+  - Reuses the scalar inclusive quartile interpolation used by legacy
+    `QUARTILE(array, quart)` for quart values 0 through 4.
+- `base/src/expressions/parser/static_analysis.rs`
+  - Classifies `_xlfn.QUARTILE.INC` as vector-plus-scalar input with scalar
+    output.
+
 ## MODE.SNGL Statistical Formula
 
 - `base/src/functions/mod.rs`

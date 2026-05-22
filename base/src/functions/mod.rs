@@ -280,7 +280,7 @@ pub enum Function {
     Prob,
     Quartile,
     QuartileExc,
-    // QuartileInc,
+    QuartileInc,
     RankAvg,
     RankEq,
     Skew,
@@ -468,6 +468,9 @@ macro_rules! impl_function_lookup {
                 }
                 if key == "QUARTILE.EXC" {
                     return Some(Function::QuartileExc);
+                }
+                if key == "_XLFN.QUARTILE.INC" {
+                    return Some(Function::QuartileInc);
                 }
                 if key == "_XLFN.PERCENTILE.INC" {
                     return Some(Function::PercentileInc);
@@ -1148,6 +1151,7 @@ impl Function {
             Function::Prob => "PROB".to_string(),
             Function::Quartile => "QUARTILE".to_string(),
             Function::QuartileExc => "QUARTILE.EXC".to_string(),
+            Function::QuartileInc => "_xlfn.QUARTILE.INC".to_string(),
             Function::RankAvg => functions.rankavg.clone(),
             Function::RankEq => functions.rankeq.clone(),
             Function::Skew => functions.skew.clone(),
@@ -1297,7 +1301,7 @@ impl Function {
             Function::Steyx => functions.steyx.clone(),
         }
     }
-    pub fn into_iter() -> IntoIter<Function, 379> {
+    pub fn into_iter() -> IntoIter<Function, 380> {
         [
             Function::And,
             Function::False,
@@ -1643,6 +1647,7 @@ impl Function {
             Function::Prob,
             Function::Quartile,
             Function::QuartileExc,
+            Function::QuartileInc,
             Function::Standardize,
             Function::StDevP,
             Function::StDevS,
@@ -1808,6 +1813,7 @@ impl Function {
             Function::Phi => "_xlfn.PHI".to_string(),
 
             Function::PoissonDist => "_xlfn.POISSON.DIST".to_string(),
+            Function::QuartileInc => "_xlfn.QUARTILE.INC".to_string(),
 
             Function::ModeSingl => "_xlfn.MODE.SNGL".to_string(),
             Function::StDevP => "_xlfn.STDEV.P".to_string(),
@@ -2203,6 +2209,7 @@ impl<'a> Model<'a> {
             Function::Prob => self.fn_prob(args, cell),
             Function::Quartile => self.fn_quartile(args, cell),
             Function::QuartileExc => self.fn_quartile_exc(args, cell),
+            Function::QuartileInc => self.fn_quartile(args, cell),
             Function::Standardize => self.fn_standardize(args, cell),
             Function::StDevP => self.fn_stdev_p(args, cell),
             Function::StDevS => self.fn_stdev_s(args, cell),
