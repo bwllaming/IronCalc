@@ -115,6 +115,17 @@ for Conductor's IronCalc adapter evidence.
   - Classifies `_xlfn.PERCENTILE.INC` as vector-plus-scalar input with scalar
     output.
 
+## PERCENTILE.EXC Statistical Formula
+
+- `base/src/functions/mod.rs`
+  - Registers the English `PERCENTILE.EXC` function name for Conductor formula
+    expansion evidence without changing localized language payloads.
+- `base/src/functions/statistical/count_and_average.rs`
+  - Adds scalar `PERCENTILE.EXC(array, k)` evaluation using Excel's exclusive
+    percentile interpolation and `#NUM!` bounds for `k`.
+- `base/src/expressions/parser/static_analysis.rs`
+  - Classifies `PERCENTILE.EXC` as vector-plus-scalar input with scalar output.
+
 ## MINVERSE Matrix Formula
 
 - `fork/sheets-engine/src/lib.rs`

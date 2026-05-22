@@ -704,6 +704,65 @@ impl<'a> Model<'a> {
         )
     }
 
+    pub(crate) fn fn_percentile_exc(
+        &mut self,
+        args: &[Node],
+        cell: CellReferenceIndex,
+    ) -> CalcResult {
+        if args.len() != 2 {
+            return CalcResult::new_args_number_error(cell);
+        }
+
+        let k = match self.get_number_no_bools(&args[1], cell) {
+            Ok(value) => value,
+            Err(error) => return error,
+        };
+        if !(0.0..1.0).contains(&k) {
+            return CalcResult::Error {
+                error: Error::NUM,
+                origin: cell,
+                message: "PERCENTILE.EXC k argument must be greater than 0 and less than 1"
+                    .to_string(),
+            };
+        }
+
+        let mut values = Vec::new();
+        if let Err(error) = self.for_each_value(&args[0..1], cell, |value| values.push(value)) {
+            return error;
+        }
+        if values.is_empty() {
+            return CalcResult::Error {
+                error: Error::NUM,
+                origin: cell,
+                message: "No numeric values for PERCENTILE.EXC".to_string(),
+            };
+        }
+
+        values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+        let position = k * (values.len() as f64 + 1.0);
+        if position < 1.0 || position > values.len() as f64 {
+            return CalcResult::Error {
+                error: Error::NUM,
+                origin: cell,
+                message: "PERCENTILE.EXC percentile lies outside the exclusive data bounds"
+                    .to_string(),
+            };
+        }
+
+        let lower_position = position.floor();
+        let upper_position = position.ceil();
+        let lower_index = lower_position as usize - 1;
+        let upper_index = upper_position as usize - 1;
+        if lower_index == upper_index {
+            return CalcResult::Number(values[lower_index]);
+        }
+
+        let fraction = position - lower_position;
+        CalcResult::Number(
+            values[lower_index] + (values[upper_index] - values[lower_index]) * fraction,
+        )
+    }
+
     pub(crate) fn fn_harmean(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
         if args.is_empty() {
             return CalcResult::new_args_number_error(cell);
