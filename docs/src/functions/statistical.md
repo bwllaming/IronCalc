@@ -115,7 +115,7 @@ You can track the progress in this [GitHub issue](https://github.com/ironcalc/Ir
 | T.INV.2T                 | <Badge type="tip" text="Available" />            | –             |
 | T.TEST                   | <Badge type="tip" text="Available" />            | –             |
 | TREND                    | <Badge type="info" text="Not implemented yet" /> | –             |
-| TRIMMEAN                 | <Badge type="info" text="Not implemented yet" /> | –             |
+| TRIMMEAN                 | <Badge type="tip" text="Available" />            | –             |
 | VAR.P                    | <Badge type="tip" text="Available" />            | –             |
 | VAR.S                    | <Badge type="tip" text="Available" />            | –             |
 | VARA                     | <Badge type="tip" text="Available" />            | –             |

@@ -6,7 +6,5 @@ lang: en-US
 
 # TRIMMEAN
 
-::: warning
-🚧 This function is not yet available in IronCalc.
-[Follow development here](https://github.com/ironcalc/IronCalc/labels/Functions)
-:::
+Returns the mean of the interior portion of a data set after excluding a
+percentage of values from the high and low ends.

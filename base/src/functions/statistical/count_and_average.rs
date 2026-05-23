@@ -324,6 +324,75 @@ impl<'a> Model<'a> {
         CalcResult::Number(sum / count)
     }
 
+    pub(crate) fn fn_trimmean(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
+        if args.len() != 2 {
+            return CalcResult::new_args_number_error(cell);
+        }
+
+        let percent = match self.evaluate_node_in_context(&args[1], cell) {
+            CalcResult::Number(value) => value,
+            CalcResult::String(value) => match self.cast_number(&value) {
+                Some(value) => value,
+                None => {
+                    return CalcResult::new_error(
+                        Error::VALUE,
+                        cell,
+                        "TRIMMEAN percent cannot be cast into number".to_string(),
+                    )
+                }
+            },
+            CalcResult::Boolean(value) => {
+                if value {
+                    1.0
+                } else {
+                    0.0
+                }
+            }
+            error @ CalcResult::Error { .. } => return error,
+            _ => {
+                return CalcResult::new_error(
+                    Error::VALUE,
+                    cell,
+                    "TRIMMEAN percent must be numeric".to_string(),
+                )
+            }
+        };
+
+        if !(0.0..=1.0).contains(&percent) {
+            return CalcResult::new_error(
+                Error::NUM,
+                cell,
+                "TRIMMEAN percent must be between 0 and 1".to_string(),
+            );
+        }
+
+        let mut values: Vec<f64> = Vec::new();
+        if let Err(e) = self.for_each_value(&args[..1], cell, |f| values.push(f)) {
+            return e;
+        }
+        if values.is_empty() {
+            return CalcResult::new_error(
+                Error::DIV,
+                cell,
+                "TRIMMEAN requires at least one numeric value".to_string(),
+            );
+        }
+
+        values.sort_by(|left, right| left.partial_cmp(right).unwrap_or(Ordering::Equal));
+        let trim_count = ((values.len() as f64 * percent).floor() as usize / 2) * 2;
+        let trim_each_side = trim_count / 2;
+        if trim_each_side * 2 >= values.len() {
+            return CalcResult::new_error(
+                Error::NUM,
+                cell,
+                "TRIMMEAN trims all numeric values".to_string(),
+            );
+        }
+
+        let remaining = &values[trim_each_side..values.len() - trim_each_side];
+        CalcResult::Number(remaining.iter().sum::<f64>() / remaining.len() as f64)
+    }
+
     pub(crate) fn fn_count(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
         if args.is_empty() {
             return CalcResult::new_args_number_error(cell);

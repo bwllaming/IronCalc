@@ -294,3 +294,15 @@ for Conductor's IronCalc adapter evidence.
 - `base/src/expressions/parser/static_analysis.rs`
   - Classifies `GROWTH` as vector regression inputs plus optional scalar
     intercept flag with dynamic-array output.
+
+## TRIMMEAN Statistical Formula
+
+- `base/src/functions/mod.rs`
+  - Registers the English `TRIMMEAN` function name for Conductor
+    stat-database formula evidence without changing localized language
+    payloads.
+- `base/src/functions/statistical/count_and_average.rs`
+  - Adds scalar `TRIMMEAN(array, percent)` evaluation over numeric scalar,
+    array, and range inputs using Excel's even two-sided trim count.
+- `base/src/expressions/parser/static_analysis.rs`
+  - Classifies `TRIMMEAN` as vector-plus-scalar input with scalar output.

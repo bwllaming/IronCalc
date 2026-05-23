@@ -299,7 +299,7 @@ pub enum Function {
     TInv2T,
     TTest,
     // Trend,
-    // Trimmean,
+    Trimmean,
     VarP,
     VarS,
     VarpA,
@@ -509,6 +509,9 @@ macro_rules! impl_function_lookup {
                 }
                 if key == "GROWTH" {
                     return Some(Function::Growth);
+                }
+                if key == "TRIMMEAN" {
+                    return Some(Function::Trimmean);
                 }
                 $(
                     if self.$field == key {
@@ -1167,6 +1170,7 @@ impl Function {
             Function::SkewP => functions.skewp.clone(),
             Function::Small => functions.small.clone(),
             Function::Standardize => functions.standardize.clone(),
+            Function::Trimmean => "TRIMMEAN".to_string(),
             Function::StDevP => functions.stdevp.clone(),
             Function::StDevS => functions.stdevs.clone(),
             Function::Stdeva => functions.stdeva.clone(),
@@ -1311,7 +1315,7 @@ impl Function {
             Function::Steyx => functions.steyx.clone(),
         }
     }
-    pub fn into_iter() -> IntoIter<Function, 382> {
+    pub fn into_iter() -> IntoIter<Function, 383> {
         [
             Function::And,
             Function::False,
@@ -1659,6 +1663,7 @@ impl Function {
             Function::QuartileExc,
             Function::QuartileInc,
             Function::Standardize,
+            Function::Trimmean,
             Function::StDevP,
             Function::StDevS,
             Function::Stdeva,
@@ -1824,6 +1829,7 @@ impl Function {
             Function::PercentrankInc => "_xlfn.PERCENTRANK.INC".to_string(),
             Function::Phi => "_xlfn.PHI".to_string(),
             Function::Growth => "GROWTH".to_string(),
+            Function::Trimmean => "TRIMMEAN".to_string(),
 
             Function::PoissonDist => "_xlfn.POISSON.DIST".to_string(),
             Function::QuartileInc => "_xlfn.QUARTILE.INC".to_string(),
@@ -2224,6 +2230,7 @@ impl<'a> Model<'a> {
             Function::QuartileExc => self.fn_quartile_exc(args, cell),
             Function::QuartileInc => self.fn_quartile(args, cell),
             Function::Standardize => self.fn_standardize(args, cell),
+            Function::Trimmean => self.fn_trimmean(args, cell),
             Function::StDevP => self.fn_stdev_p(args, cell),
             Function::StDevS => self.fn_stdev_s(args, cell),
             Function::Stdeva => self.fn_stdeva(args, cell),
