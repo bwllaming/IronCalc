@@ -86,6 +86,14 @@ for Conductor's IronCalc adapter evidence.
     returns Excel's OOXML-compatible `#NAME?` posture while true ETS
     seasonality semantics remain unimplemented in the fork.
 
+## TREND Statistical Formula
+
+- `fork/sheets-engine/src/lib.rs`
+  - Adds a narrow Conductor adapter extension for bounded local-reference
+    `TREND(known_y, known_x, new_x)` and `INDEX(TREND(...), row, column)` cases
+    so `CalcEngine` can match the checked stat-database representative while
+    upstream IronCalc still marks `TREND` unimplemented.
+
 ## QUARTILE Statistical Formula
 
 - `base/src/functions/mod.rs`
