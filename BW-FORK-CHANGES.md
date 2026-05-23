@@ -261,6 +261,16 @@ for Conductor's IronCalc adapter evidence.
     and full 1x2 coefficient spill while upstream IronCalc remains missing the
     function.
 
+## LOGEST Statistical Formula
+
+- `fork/sheets-engine/src/lib.rs`
+  - Adds a narrow Conductor adapter extension for bounded same-shape
+    local-reference `LOGEST(known_y, known_x)` one-variable exponential
+    regression coefficient output and `INDEX(LOGEST(...), row, column)` scalar
+    extraction so `CalcEngine` can compare the checked stat-database Excel
+    representative and full 1x2 coefficient spill while upstream IronCalc
+    remains missing the function.
+
 ## GROWTH Statistical Formula
 
 - `base/src/functions/mod.rs`
