@@ -231,6 +231,17 @@ for Conductor's IronCalc adapter evidence.
 - `base/src/expressions/parser/static_analysis.rs`
   - Classifies `COUPNCD` as scalar-only input with optional basis.
 
+## COUPPCD Financial Formula
+
+- `base/src/functions/mod.rs`
+  - Registers the English `COUPPCD` function name for Conductor financial
+    formula evidence without changing localized language payloads.
+- `base/src/functions/financial.rs`
+  - Adds scalar `COUPPCD(settlement, maturity, frequency, [basis])`
+    evaluation for the serial date of the coupon before settlement.
+- `base/src/expressions/parser/static_analysis.rs`
+  - Classifies `COUPPCD` as scalar-only input with optional basis.
+
 ## COUPNUM Financial Formula
 
 - `base/src/functions/mod.rs`

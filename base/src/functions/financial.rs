@@ -2111,6 +2111,69 @@ impl<'a> Model<'a> {
         }
     }
 
+    // COUPPCD(settlement, maturity, frequency, [basis])
+    pub(crate) fn fn_couppcd(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
+        if !(3..=4).contains(&args.len()) {
+            return CalcResult::new_args_number_error(cell);
+        }
+        let settlement_serial = match self.get_number_no_bools(&args[0], cell) {
+            Ok(f) => f.floor() as i64,
+            Err(s) => return s,
+        };
+        let maturity_serial = match self.get_number_no_bools(&args[1], cell) {
+            Ok(f) => f.floor() as i64,
+            Err(s) => return s,
+        };
+        let frequency = match self.get_number_no_bools(&args[2], cell) {
+            Ok(f) => f.trunc() as i32,
+            Err(s) => return s,
+        };
+        let basis = if args.len() == 4 {
+            match self.get_number_no_bools(&args[3], cell) {
+                Ok(f) => f.trunc() as i32,
+                Err(s) => return s,
+            }
+        } else {
+            0
+        };
+
+        if settlement_serial >= maturity_serial {
+            return CalcResult::new_error(
+                Error::NUM,
+                cell,
+                "settlement should be < maturity".to_string(),
+            );
+        }
+        if !matches!(frequency, 1 | 2 | 4) {
+            return CalcResult::new_error(Error::NUM, cell, "Invalid frequency".to_string());
+        }
+        if !(0..=4).contains(&basis) {
+            return CalcResult::new_error(Error::NUM, cell, "Invalid basis".to_string());
+        }
+
+        let settlement = match from_excel_date(settlement_serial) {
+            Ok(date) => date,
+            Err(_) => return CalcResult::new_error(Error::NUM, cell, "Invalid date".to_string()),
+        };
+        let maturity = match from_excel_date(maturity_serial) {
+            Ok(date) => date,
+            Err(_) => return CalcResult::new_error(Error::NUM, cell, "Invalid date".to_string()),
+        };
+        let previous_coupon = match previous_coupon_date(settlement, maturity, frequency) {
+            Some(date) => date,
+            None => return CalcResult::new_error(Error::NUM, cell, "Invalid date".to_string()),
+        };
+
+        match date_to_serial_number(
+            previous_coupon.day(),
+            previous_coupon.month(),
+            previous_coupon.year(),
+        ) {
+            Ok(serial) => CalcResult::Number(serial as f64),
+            Err(_) => CalcResult::new_error(Error::NUM, cell, "Invalid date".to_string()),
+        }
+    }
+
     // COUPNUM(settlement, maturity, frequency, [basis])
     pub(crate) fn fn_coupnum(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
         if !(3..=4).contains(&args.len()) {
@@ -2167,9 +2230,7 @@ impl<'a> Model<'a> {
             coupons += 1;
             coupon = match shift_months_clamped(coupon, -months_per_coupon) {
                 Some(date) => date,
-                None => {
-                    return CalcResult::new_error(Error::NUM, cell, "Invalid date".to_string())
-                }
+                None => return CalcResult::new_error(Error::NUM, cell, "Invalid date".to_string()),
             };
         }
 
