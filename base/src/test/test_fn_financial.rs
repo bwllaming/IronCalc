@@ -702,3 +702,69 @@ fn fn_coupnum() {
     assert_eq!(model._get_text("B2"), *"#NUM!");
     assert_eq!(model._get_text("B3"), *"#NUM!");
 }
+
+#[test]
+fn fn_security_duration_price_yield() {
+    let mut model = new_empty_model();
+
+    model._set(
+        "A1",
+        "=DURATION(DATE(2024,1,1),DATE(2029,1,1),0.05,0.045,2,0)",
+    );
+    model._set(
+        "A2",
+        "=MDURATION(DATE(2024,1,1),DATE(2029,1,1),0.05,0.045,2,0)",
+    );
+    model._set(
+        "A3",
+        "=PRICE(DATE(2024,1,1),DATE(2029,1,1),0.05,0.045,100,2,0)",
+    );
+    model._set("A4", "=PRICEDISC(DATE(2024,1,1),DATE(2024,7,1),0.04,100,0)");
+    model._set(
+        "A5",
+        "=PRICEMAT(DATE(2024,1,1),DATE(2024,7,1),DATE(2023,7,1),0.05,0.045,0)",
+    );
+    model._set(
+        "A6",
+        "=YIELD(DATE(2024,1,1),DATE(2029,1,1),0.05,98,100,2,0)",
+    );
+    model._set("A7", "=YIELDDISC(DATE(2024,1,1),DATE(2024,7,1),97.5,100,0)");
+    model._set(
+        "A8",
+        "=YIELDMAT(DATE(2024,1,1),DATE(2024,7,1),DATE(2023,7,1),0.05,98,0)",
+    );
+    model._set("A9", "=ODDFPRICE(DATE(2024,3,1),DATE(2027,7,1),DATE(2024,1,1),DATE(2024,7,1),0.05,0.045,100,2,0)");
+    model._set(
+        "A10",
+        "=ODDLPRICE(DATE(2024,3,1),DATE(2027,7,1),DATE(2027,1,1),0.05,0.045,100,2,0)",
+    );
+
+    model.evaluate();
+
+    assert_number_close(&model, "Sheet1!A1", 4.492203482637093);
+    assert_number_close(&model, "Sheet1!A2", 4.39335303925388);
+    assert_number_close(&model, "Sheet1!A3", 102.21655408721719);
+    assert_eq!(
+        model.get_cell_value_by_ref("Sheet1!A4"),
+        Ok(CellValue::Number(98.0))
+    );
+    assert_number_close(&model, "Sheet1!A5", 100.18948655256725);
+    assert_number_close(&model, "Sheet1!A6", 0.05462513387579247);
+    assert_number_close(&model, "Sheet1!A7", 0.05128205128205128);
+    assert_number_close(&model, "Sheet1!A8", 0.08955223880597046);
+    assert_eq!(model._get_text("A9"), *"#NUM!");
+    assert_eq!(model._get_text("A10"), *"#NUM!");
+}
+
+fn assert_number_close(model: &crate::model::Model<'_>, cell: &str, expected: f64) {
+    let actual = model
+        .get_cell_value_by_ref(cell)
+        .unwrap_or_else(|error| panic!("{cell}: {error}"));
+    let CellValue::Number(actual) = actual else {
+        panic!("{cell}: expected number, got {actual:?}");
+    };
+    assert!(
+        (actual - expected).abs() < 1e-9,
+        "{cell}: expected {expected}, got {actual}"
+    );
+}

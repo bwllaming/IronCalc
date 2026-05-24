@@ -345,6 +345,18 @@ pub enum Function {
     Coupncd,
     Coupnum,
     Couppcd,
+    Duration,
+    Mduration,
+    Oddfprice,
+    Oddfyield,
+    Oddlprice,
+    Oddlyield,
+    Price,
+    Pricedisc,
+    Pricemat,
+    Yield,
+    Yielddisc,
+    Yieldmat,
     Cumipmt,
     Cumprinc,
     Db,
@@ -557,6 +569,42 @@ macro_rules! impl_function_lookup {
                 }
                 if key == "COUPPCD" {
                     return Some(Function::Couppcd);
+                }
+                if key == "DURATION" {
+                    return Some(Function::Duration);
+                }
+                if key == "MDURATION" {
+                    return Some(Function::Mduration);
+                }
+                if key == "ODDFPRICE" {
+                    return Some(Function::Oddfprice);
+                }
+                if key == "ODDFYIELD" {
+                    return Some(Function::Oddfyield);
+                }
+                if key == "ODDLPRICE" {
+                    return Some(Function::Oddlprice);
+                }
+                if key == "ODDLYIELD" {
+                    return Some(Function::Oddlyield);
+                }
+                if key == "PRICE" {
+                    return Some(Function::Price);
+                }
+                if key == "PRICEDISC" {
+                    return Some(Function::Pricedisc);
+                }
+                if key == "PRICEMAT" {
+                    return Some(Function::Pricemat);
+                }
+                if key == "YIELD" {
+                    return Some(Function::Yield);
+                }
+                if key == "YIELDDISC" {
+                    return Some(Function::Yielddisc);
+                }
+                if key == "YIELDMAT" {
+                    return Some(Function::Yieldmat);
                 }
                 if key == "FVSCHEDULE" {
                     return Some(Function::Fvschedule);
@@ -1282,6 +1330,18 @@ impl Function {
             Function::Coupncd => "COUPNCD".to_string(),
             Function::Coupnum => "COUPNUM".to_string(),
             Function::Couppcd => "COUPPCD".to_string(),
+            Function::Duration => "DURATION".to_string(),
+            Function::Mduration => "MDURATION".to_string(),
+            Function::Oddfprice => "ODDFPRICE".to_string(),
+            Function::Oddfyield => "ODDFYIELD".to_string(),
+            Function::Oddlprice => "ODDLPRICE".to_string(),
+            Function::Oddlyield => "ODDLYIELD".to_string(),
+            Function::Price => "PRICE".to_string(),
+            Function::Pricedisc => "PRICEDISC".to_string(),
+            Function::Pricemat => "PRICEMAT".to_string(),
+            Function::Yield => "YIELD".to_string(),
+            Function::Yielddisc => "YIELDDISC".to_string(),
+            Function::Yieldmat => "YIELDMAT".to_string(),
             Function::Cumipmt => functions.cumipmt.clone(),
             Function::Cumprinc => functions.cumprinc.clone(),
             Function::Db => functions.db.clone(),
@@ -1390,7 +1450,7 @@ impl Function {
             Function::Steyx => functions.steyx.clone(),
         }
     }
-    pub fn into_iter() -> IntoIter<Function, 396> {
+    pub fn into_iter() -> IntoIter<Function, 408> {
         [
             Function::And,
             Function::False,
@@ -1605,6 +1665,18 @@ impl Function {
             Function::Coupdaysnc,
             Function::Coupnum,
             Function::Couppcd,
+            Function::Duration,
+            Function::Mduration,
+            Function::Oddfprice,
+            Function::Oddfyield,
+            Function::Oddlprice,
+            Function::Oddlyield,
+            Function::Price,
+            Function::Pricedisc,
+            Function::Pricemat,
+            Function::Yield,
+            Function::Yielddisc,
+            Function::Yieldmat,
             Function::Rri,
             Function::Sln,
             Function::Syd,
@@ -2157,6 +2229,18 @@ impl<'a> Model<'a> {
             Function::Coupncd => self.fn_coupncd(args, cell),
             Function::Coupnum => self.fn_coupnum(args, cell),
             Function::Couppcd => self.fn_couppcd(args, cell),
+            Function::Duration => self.fn_duration(args, cell),
+            Function::Mduration => self.fn_mduration(args, cell),
+            Function::Oddfprice => self.fn_oddfprice(args, cell),
+            Function::Oddfyield => self.fn_oddfyield(args, cell),
+            Function::Oddlprice => self.fn_oddlprice(args, cell),
+            Function::Oddlyield => self.fn_oddlyield(args, cell),
+            Function::Price => self.fn_price(args, cell),
+            Function::Pricedisc => self.fn_pricedisc(args, cell),
+            Function::Pricemat => self.fn_pricemat(args, cell),
+            Function::Yield => self.fn_yield(args, cell),
+            Function::Yielddisc => self.fn_yielddisc(args, cell),
+            Function::Yieldmat => self.fn_yieldmat(args, cell),
             Function::Rri => self.fn_rri(args, cell),
             Function::Sln => self.fn_sln(args, cell),
             Function::Syd => self.fn_syd(args, cell),

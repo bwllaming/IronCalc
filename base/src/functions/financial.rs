@@ -85,6 +85,28 @@ fn next_coupon_date(
     Some(shift_months_clamped(coupon, months_per_coupon)?)
 }
 
+fn validate_security_dates_and_basis(
+    settlement: i64,
+    maturity: i64,
+    basis: i32,
+) -> Result<(), (Error, String)> {
+    if settlement >= maturity {
+        return Err((Error::NUM, "settlement should be < maturity".to_string()));
+    }
+    if !(0..=4).contains(&basis) {
+        return Err((Error::NUM, "Invalid basis".to_string()));
+    }
+    Ok(())
+}
+
+fn validate_security_frequency(frequency: i32) -> Result<(), (Error, String)> {
+    if matches!(frequency, 1 | 2 | 4) {
+        Ok(())
+    } else {
+        Err((Error::NUM, "Invalid frequency".to_string()))
+    }
+}
+
 fn compute_payment(
     rate: f64,
     nper: f64,
@@ -2235,6 +2257,882 @@ impl<'a> Model<'a> {
         }
 
         CalcResult::Number(coupons as f64)
+    }
+
+    fn year_fraction(
+        &mut self,
+        start_serial: i64,
+        end_serial: i64,
+        basis: i32,
+        cell: CellReferenceIndex,
+    ) -> Result<f64, CalcResult> {
+        match self.fn_yearfrac(
+            &[
+                Node::NumberKind(start_serial as f64),
+                Node::NumberKind(end_serial as f64),
+                Node::NumberKind(basis as f64),
+            ],
+            cell,
+        ) {
+            CalcResult::Number(f) => Ok(f),
+            s => Err(s),
+        }
+    }
+
+    fn coupon_days_value(
+        &mut self,
+        settlement_serial: i64,
+        maturity_serial: i64,
+        frequency: i32,
+        basis: i32,
+        cell: CellReferenceIndex,
+    ) -> Result<f64, CalcResult> {
+        match self.fn_coupdays(
+            &[
+                Node::NumberKind(settlement_serial as f64),
+                Node::NumberKind(maturity_serial as f64),
+                Node::NumberKind(frequency as f64),
+                Node::NumberKind(basis as f64),
+            ],
+            cell,
+        ) {
+            CalcResult::Number(f) => Ok(f),
+            s => Err(s),
+        }
+    }
+
+    fn coupon_days_nc_value(
+        &mut self,
+        settlement_serial: i64,
+        maturity_serial: i64,
+        frequency: i32,
+        basis: i32,
+        cell: CellReferenceIndex,
+    ) -> Result<f64, CalcResult> {
+        match self.fn_coupdaysnc(
+            &[
+                Node::NumberKind(settlement_serial as f64),
+                Node::NumberKind(maturity_serial as f64),
+                Node::NumberKind(frequency as f64),
+                Node::NumberKind(basis as f64),
+            ],
+            cell,
+        ) {
+            CalcResult::Number(f) => Ok(f),
+            s => Err(s),
+        }
+    }
+
+    fn coupon_day_bs_value(
+        &mut self,
+        settlement_serial: i64,
+        maturity_serial: i64,
+        frequency: i32,
+        basis: i32,
+        cell: CellReferenceIndex,
+    ) -> Result<f64, CalcResult> {
+        match self.fn_coupdaybs(
+            &[
+                Node::NumberKind(settlement_serial as f64),
+                Node::NumberKind(maturity_serial as f64),
+                Node::NumberKind(frequency as f64),
+                Node::NumberKind(basis as f64),
+            ],
+            cell,
+        ) {
+            CalcResult::Number(f) => Ok(f),
+            s => Err(s),
+        }
+    }
+
+    fn coupon_num_value(
+        &mut self,
+        settlement_serial: i64,
+        maturity_serial: i64,
+        frequency: i32,
+        basis: i32,
+        cell: CellReferenceIndex,
+    ) -> Result<f64, CalcResult> {
+        match self.fn_coupnum(
+            &[
+                Node::NumberKind(settlement_serial as f64),
+                Node::NumberKind(maturity_serial as f64),
+                Node::NumberKind(frequency as f64),
+                Node::NumberKind(basis as f64),
+            ],
+            cell,
+        ) {
+            CalcResult::Number(f) => Ok(f),
+            s => Err(s),
+        }
+    }
+
+    fn security_price_value(
+        &mut self,
+        settlement_serial: i64,
+        maturity_serial: i64,
+        rate: f64,
+        yield_rate: f64,
+        redemption: f64,
+        frequency: i32,
+        basis: i32,
+        cell: CellReferenceIndex,
+    ) -> Result<f64, CalcResult> {
+        let frequency_value = frequency as f64;
+        let coupon_days =
+            self.coupon_days_value(settlement_serial, maturity_serial, frequency, basis, cell)?;
+        let dsc_e =
+            self.coupon_days_nc_value(settlement_serial, maturity_serial, frequency, basis, cell)?
+                / coupon_days;
+        let coupons =
+            self.coupon_num_value(settlement_serial, maturity_serial, frequency, basis, cell)?;
+        let accrued_days =
+            self.coupon_day_bs_value(settlement_serial, maturity_serial, frequency, basis, cell)?;
+
+        let coupon = 100.0 * rate / frequency_value;
+        let discount = 1.0 + yield_rate / frequency_value;
+        let mut result = redemption / discount.powf(coupons - 1.0 + dsc_e);
+        result -= coupon * accrued_days / coupon_days;
+        for period in 0..(coupons as i32) {
+            result += coupon / discount.powf(period as f64 + dsc_e);
+        }
+        Ok(result)
+    }
+
+    fn security_yield_value(
+        &mut self,
+        settlement_serial: i64,
+        maturity_serial: i64,
+        rate: f64,
+        price: f64,
+        redemption: f64,
+        frequency: i32,
+        basis: i32,
+        cell: CellReferenceIndex,
+    ) -> Result<f64, CalcResult> {
+        let mut lower_yield = 0.0;
+        let mut upper_yield = 1.0;
+        let mut lower_price = self.security_price_value(
+            settlement_serial,
+            maturity_serial,
+            rate,
+            lower_yield,
+            redemption,
+            frequency,
+            basis,
+            cell,
+        )?;
+        let mut upper_price = self.security_price_value(
+            settlement_serial,
+            maturity_serial,
+            rate,
+            upper_yield,
+            redemption,
+            frequency,
+            basis,
+            cell,
+        )?;
+        let mut yield_value = (upper_yield - lower_yield) * 0.5;
+        let mut price_value = 0.0;
+
+        for _ in 0..100 {
+            price_value = self.security_price_value(
+                settlement_serial,
+                maturity_serial,
+                rate,
+                yield_value,
+                redemption,
+                frequency,
+                basis,
+                cell,
+            )?;
+            if (price_value - price).abs() <= 1e-10 {
+                return Ok(yield_value);
+            }
+            if (price - lower_price).abs() <= 1e-10 {
+                return Ok(lower_yield);
+            }
+            if (price - upper_price).abs() <= 1e-10 {
+                return Ok(upper_yield);
+            }
+            if price < upper_price {
+                upper_yield *= 2.0;
+                upper_price = self.security_price_value(
+                    settlement_serial,
+                    maturity_serial,
+                    rate,
+                    upper_yield,
+                    redemption,
+                    frequency,
+                    basis,
+                    cell,
+                )?;
+                yield_value = (upper_yield - lower_yield) * 0.5;
+            } else {
+                if price < price_value {
+                    lower_yield = yield_value;
+                    lower_price = price_value;
+                } else {
+                    upper_yield = yield_value;
+                    upper_price = price_value;
+                }
+                yield_value = upper_yield
+                    - (upper_yield - lower_yield)
+                        * ((price - upper_price) / (lower_price - upper_price));
+            }
+        }
+
+        if (price - price_value).abs() > price / 100.0 {
+            return Err(CalcResult::new_error(
+                Error::NUM,
+                cell,
+                "Invalid data for YIELD".to_string(),
+            ));
+        }
+        Ok(yield_value)
+    }
+
+    fn finish_financial_result(
+        result: f64,
+        function_name: &str,
+        cell: CellReferenceIndex,
+    ) -> CalcResult {
+        if result.is_infinite() {
+            return CalcResult::new_error(Error::DIV, cell, "Division by 0".to_string());
+        }
+        if result.is_nan() {
+            return CalcResult::new_error(
+                Error::NUM,
+                cell,
+                format!("Invalid data for {function_name}"),
+            );
+        }
+        CalcResult::Number(result)
+    }
+
+    // DURATION(settlement, maturity, coupon, yield, frequency, [basis])
+    pub(crate) fn fn_duration(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
+        if !(5..=6).contains(&args.len()) {
+            return CalcResult::new_args_number_error(cell);
+        }
+        let settlement_serial = match self.get_number_no_bools(&args[0], cell) {
+            Ok(f) => f.floor() as i64,
+            Err(s) => return s,
+        };
+        let maturity_serial = match self.get_number_no_bools(&args[1], cell) {
+            Ok(f) => f.floor() as i64,
+            Err(s) => return s,
+        };
+        let coupon_rate = match self.get_number_no_bools(&args[2], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let yield_rate = match self.get_number_no_bools(&args[3], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let frequency = match self.get_number_no_bools(&args[4], cell) {
+            Ok(f) => f.trunc() as i32,
+            Err(s) => return s,
+        };
+        let basis = if args.len() == 6 {
+            match self.get_number_no_bools(&args[5], cell) {
+                Ok(f) => f.trunc() as i32,
+                Err(s) => return s,
+            }
+        } else {
+            0
+        };
+
+        if let Err((error, message)) =
+            validate_security_dates_and_basis(settlement_serial, maturity_serial, basis)
+        {
+            return CalcResult::new_error(error, cell, message);
+        }
+        if let Err((error, message)) = validate_security_frequency(frequency) {
+            return CalcResult::new_error(error, cell, message);
+        }
+        if coupon_rate < 0.0 || yield_rate < 0.0 {
+            return CalcResult::new_error(Error::NUM, cell, "Invalid rate".to_string());
+        }
+
+        let year_fraction =
+            match self.year_fraction(settlement_serial, maturity_serial, basis, cell) {
+                Ok(f) => f,
+                Err(s) => return s,
+            };
+        let coupons =
+            match self.coupon_num_value(settlement_serial, maturity_serial, frequency, basis, cell)
+            {
+                Ok(f) => f,
+                Err(s) => return s,
+            };
+        let coupon = coupon_rate * 100.0 / frequency as f64;
+        let discount = 1.0 + yield_rate / frequency as f64;
+        let diff = year_fraction * frequency as f64 - coupons;
+
+        let mut duration = 0.0;
+        let mut price = 0.0;
+        for period in 1..(coupons as i32) {
+            let t = period as f64 + diff;
+            duration += t * coupon / discount.powf(t);
+            price += coupon / discount.powf(t);
+        }
+        let final_t = coupons + diff;
+        duration += final_t * (coupon + 100.0) / discount.powf(final_t);
+        price += (coupon + 100.0) / discount.powf(final_t);
+        let result = duration / price / frequency as f64;
+        Self::finish_financial_result(result, "DURATION", cell)
+    }
+
+    // MDURATION(settlement, maturity, coupon, yield, frequency, [basis])
+    pub(crate) fn fn_mduration(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
+        let duration = match self.fn_duration(args, cell) {
+            CalcResult::Number(f) => f,
+            s => return s,
+        };
+        let yield_rate = match self.get_number_no_bools(&args[3], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let frequency = match self.get_number_no_bools(&args[4], cell) {
+            Ok(f) => f.trunc() as i32,
+            Err(s) => return s,
+        };
+        let result = duration / (1.0 + yield_rate / frequency as f64);
+        Self::finish_financial_result(result, "MDURATION", cell)
+    }
+
+    // ODDFPRICE(settlement, maturity, issue, first_coupon, rate, yield, redemption, frequency, [basis])
+    pub(crate) fn fn_oddfprice(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
+        if !(8..=9).contains(&args.len()) {
+            return CalcResult::new_args_number_error(cell);
+        }
+        CalcResult::new_error(Error::NUM, cell, "Unsupported odd first period".to_string())
+    }
+
+    // ODDFYIELD(settlement, maturity, issue, first_coupon, rate, pr, redemption, frequency, [basis])
+    pub(crate) fn fn_oddfyield(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
+        if !(8..=9).contains(&args.len()) {
+            return CalcResult::new_args_number_error(cell);
+        }
+        CalcResult::new_error(Error::NUM, cell, "Unsupported odd first period".to_string())
+    }
+
+    // ODDLPRICE(settlement, maturity, last_interest, rate, yield, redemption, frequency, [basis])
+    pub(crate) fn fn_oddlprice(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
+        if !(7..=8).contains(&args.len()) {
+            return CalcResult::new_args_number_error(cell);
+        }
+        let settlement_serial = match self.get_number_no_bools(&args[0], cell) {
+            Ok(f) => f.floor() as i64,
+            Err(s) => return s,
+        };
+        let maturity_serial = match self.get_number_no_bools(&args[1], cell) {
+            Ok(f) => f.floor() as i64,
+            Err(s) => return s,
+        };
+        let last_interest_serial = match self.get_number_no_bools(&args[2], cell) {
+            Ok(f) => f.floor() as i64,
+            Err(s) => return s,
+        };
+        let rate = match self.get_number_no_bools(&args[3], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let yield_rate = match self.get_number_no_bools(&args[4], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let redemption = match self.get_number_no_bools(&args[5], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let frequency = match self.get_number_no_bools(&args[6], cell) {
+            Ok(f) => f.trunc() as i32,
+            Err(s) => return s,
+        };
+        let basis = if args.len() == 8 {
+            match self.get_number_no_bools(&args[7], cell) {
+                Ok(f) => f.trunc() as i32,
+                Err(s) => return s,
+            }
+        } else {
+            0
+        };
+
+        if let Err((error, message)) =
+            validate_security_dates_and_basis(settlement_serial, maturity_serial, basis)
+        {
+            return CalcResult::new_error(error, cell, message);
+        }
+        if let Err((error, message)) = validate_security_frequency(frequency) {
+            return CalcResult::new_error(error, cell, message);
+        }
+        if last_interest_serial >= settlement_serial
+            || rate < 0.0
+            || yield_rate < 0.0
+            || redemption <= 0.0
+        {
+            return CalcResult::new_error(
+                Error::NUM,
+                cell,
+                "Invalid data for ODDLPRICE".to_string(),
+            );
+        }
+
+        let frequency_value = frequency as f64;
+        let dci = match self.year_fraction(last_interest_serial, maturity_serial, basis, cell) {
+            Ok(f) => f * frequency_value,
+            Err(s) => return s,
+        };
+        let dsci = match self.year_fraction(settlement_serial, maturity_serial, basis, cell) {
+            Ok(f) => f * frequency_value,
+            Err(s) => return s,
+        };
+        let ai = match self.year_fraction(last_interest_serial, settlement_serial, basis, cell) {
+            Ok(f) => f * frequency_value,
+            Err(s) => return s,
+        };
+        let result = (redemption + dci * 100.0 * rate / frequency_value)
+            / (dsci * yield_rate / frequency_value + 1.0)
+            - ai * 100.0 * rate / frequency_value;
+        Self::finish_financial_result(result, "ODDLPRICE", cell)
+    }
+
+    // ODDLYIELD(settlement, maturity, last_interest, rate, pr, redemption, frequency, [basis])
+    pub(crate) fn fn_oddlyield(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
+        if !(7..=8).contains(&args.len()) {
+            return CalcResult::new_args_number_error(cell);
+        }
+        let settlement_serial = match self.get_number_no_bools(&args[0], cell) {
+            Ok(f) => f.floor() as i64,
+            Err(s) => return s,
+        };
+        let maturity_serial = match self.get_number_no_bools(&args[1], cell) {
+            Ok(f) => f.floor() as i64,
+            Err(s) => return s,
+        };
+        let last_interest_serial = match self.get_number_no_bools(&args[2], cell) {
+            Ok(f) => f.floor() as i64,
+            Err(s) => return s,
+        };
+        let rate = match self.get_number_no_bools(&args[3], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let price = match self.get_number_no_bools(&args[4], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let redemption = match self.get_number_no_bools(&args[5], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let frequency = match self.get_number_no_bools(&args[6], cell) {
+            Ok(f) => f.trunc() as i32,
+            Err(s) => return s,
+        };
+        let basis = if args.len() == 8 {
+            match self.get_number_no_bools(&args[7], cell) {
+                Ok(f) => f.trunc() as i32,
+                Err(s) => return s,
+            }
+        } else {
+            0
+        };
+
+        if let Err((error, message)) =
+            validate_security_dates_and_basis(settlement_serial, maturity_serial, basis)
+        {
+            return CalcResult::new_error(error, cell, message);
+        }
+        if let Err((error, message)) = validate_security_frequency(frequency) {
+            return CalcResult::new_error(error, cell, message);
+        }
+        if last_interest_serial >= settlement_serial
+            || rate < 0.0
+            || price <= 0.0
+            || redemption <= 0.0
+        {
+            return CalcResult::new_error(
+                Error::NUM,
+                cell,
+                "Invalid data for ODDLYIELD".to_string(),
+            );
+        }
+
+        let frequency_value = frequency as f64;
+        let dci = match self.year_fraction(last_interest_serial, maturity_serial, basis, cell) {
+            Ok(f) => f * frequency_value,
+            Err(s) => return s,
+        };
+        let dsci = match self.year_fraction(settlement_serial, maturity_serial, basis, cell) {
+            Ok(f) => f * frequency_value,
+            Err(s) => return s,
+        };
+        let ai = match self.year_fraction(last_interest_serial, settlement_serial, basis, cell) {
+            Ok(f) => f * frequency_value,
+            Err(s) => return s,
+        };
+        let result = ((redemption + dci * 100.0 * rate / frequency_value)
+            / (price + ai * 100.0 * rate / frequency_value)
+            - 1.0)
+            * frequency_value
+            / dsci;
+        Self::finish_financial_result(result, "ODDLYIELD", cell)
+    }
+
+    // PRICE(settlement, maturity, rate, yield, redemption, frequency, [basis])
+    pub(crate) fn fn_price(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
+        if !(6..=7).contains(&args.len()) {
+            return CalcResult::new_args_number_error(cell);
+        }
+        let settlement_serial = match self.get_number_no_bools(&args[0], cell) {
+            Ok(f) => f.floor() as i64,
+            Err(s) => return s,
+        };
+        let maturity_serial = match self.get_number_no_bools(&args[1], cell) {
+            Ok(f) => f.floor() as i64,
+            Err(s) => return s,
+        };
+        let rate = match self.get_number_no_bools(&args[2], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let yield_rate = match self.get_number_no_bools(&args[3], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let redemption = match self.get_number_no_bools(&args[4], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let frequency = match self.get_number_no_bools(&args[5], cell) {
+            Ok(f) => f.trunc() as i32,
+            Err(s) => return s,
+        };
+        let basis = if args.len() == 7 {
+            match self.get_number_no_bools(&args[6], cell) {
+                Ok(f) => f.trunc() as i32,
+                Err(s) => return s,
+            }
+        } else {
+            0
+        };
+
+        if let Err((error, message)) =
+            validate_security_dates_and_basis(settlement_serial, maturity_serial, basis)
+        {
+            return CalcResult::new_error(error, cell, message);
+        }
+        if let Err((error, message)) = validate_security_frequency(frequency) {
+            return CalcResult::new_error(error, cell, message);
+        }
+        if rate < 0.0 || yield_rate < 0.0 || redemption <= 0.0 {
+            return CalcResult::new_error(Error::NUM, cell, "Invalid data for PRICE".to_string());
+        }
+        let result = match self.security_price_value(
+            settlement_serial,
+            maturity_serial,
+            rate,
+            yield_rate,
+            redemption,
+            frequency,
+            basis,
+            cell,
+        ) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        Self::finish_financial_result(result, "PRICE", cell)
+    }
+
+    // PRICEDISC(settlement, maturity, discount, redemption, [basis])
+    pub(crate) fn fn_pricedisc(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
+        if !(4..=5).contains(&args.len()) {
+            return CalcResult::new_args_number_error(cell);
+        }
+        let settlement_serial = match self.get_number_no_bools(&args[0], cell) {
+            Ok(f) => f.floor() as i64,
+            Err(s) => return s,
+        };
+        let maturity_serial = match self.get_number_no_bools(&args[1], cell) {
+            Ok(f) => f.floor() as i64,
+            Err(s) => return s,
+        };
+        let discount = match self.get_number_no_bools(&args[2], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let redemption = match self.get_number_no_bools(&args[3], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let basis = if args.len() == 5 {
+            match self.get_number_no_bools(&args[4], cell) {
+                Ok(f) => f.trunc() as i32,
+                Err(s) => return s,
+            }
+        } else {
+            0
+        };
+        if let Err((error, message)) =
+            validate_security_dates_and_basis(settlement_serial, maturity_serial, basis)
+        {
+            return CalcResult::new_error(error, cell, message);
+        }
+        if discount <= 0.0 || redemption <= 0.0 {
+            return CalcResult::new_error(
+                Error::NUM,
+                cell,
+                "Invalid data for PRICEDISC".to_string(),
+            );
+        }
+        let year_fraction =
+            match self.year_fraction(settlement_serial, maturity_serial, basis, cell) {
+                Ok(f) => f,
+                Err(s) => return s,
+            };
+        let result = redemption * (1.0 - discount * year_fraction);
+        Self::finish_financial_result(result, "PRICEDISC", cell)
+    }
+
+    // PRICEMAT(settlement, maturity, issue, rate, yield, [basis])
+    pub(crate) fn fn_pricemat(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
+        if !(5..=6).contains(&args.len()) {
+            return CalcResult::new_args_number_error(cell);
+        }
+        let settlement_serial = match self.get_number_no_bools(&args[0], cell) {
+            Ok(f) => f.floor() as i64,
+            Err(s) => return s,
+        };
+        let maturity_serial = match self.get_number_no_bools(&args[1], cell) {
+            Ok(f) => f.floor() as i64,
+            Err(s) => return s,
+        };
+        let issue_serial = match self.get_number_no_bools(&args[2], cell) {
+            Ok(f) => f.floor() as i64,
+            Err(s) => return s,
+        };
+        let rate = match self.get_number_no_bools(&args[3], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let yield_rate = match self.get_number_no_bools(&args[4], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let basis = if args.len() == 6 {
+            match self.get_number_no_bools(&args[5], cell) {
+                Ok(f) => f.trunc() as i32,
+                Err(s) => return s,
+            }
+        } else {
+            0
+        };
+        if let Err((error, message)) =
+            validate_security_dates_and_basis(settlement_serial, maturity_serial, basis)
+        {
+            return CalcResult::new_error(error, cell, message);
+        }
+        if rate < 0.0 || yield_rate < 0.0 {
+            return CalcResult::new_error(
+                Error::NUM,
+                cell,
+                "Invalid data for PRICEMAT".to_string(),
+            );
+        }
+        let iss_mat = match self.year_fraction(issue_serial, maturity_serial, basis, cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let iss_set = match self.year_fraction(issue_serial, settlement_serial, basis, cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let set_mat = match self.year_fraction(settlement_serial, maturity_serial, basis, cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let result =
+            (((1.0 + iss_mat * rate) / (1.0 + set_mat * yield_rate)) - iss_set * rate) * 100.0;
+        Self::finish_financial_result(result, "PRICEMAT", cell)
+    }
+
+    // YIELD(settlement, maturity, rate, pr, redemption, frequency, [basis])
+    pub(crate) fn fn_yield(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
+        if !(6..=7).contains(&args.len()) {
+            return CalcResult::new_args_number_error(cell);
+        }
+        let settlement_serial = match self.get_number_no_bools(&args[0], cell) {
+            Ok(f) => f.floor() as i64,
+            Err(s) => return s,
+        };
+        let maturity_serial = match self.get_number_no_bools(&args[1], cell) {
+            Ok(f) => f.floor() as i64,
+            Err(s) => return s,
+        };
+        let rate = match self.get_number_no_bools(&args[2], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let price = match self.get_number_no_bools(&args[3], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let redemption = match self.get_number_no_bools(&args[4], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let frequency = match self.get_number_no_bools(&args[5], cell) {
+            Ok(f) => f.trunc() as i32,
+            Err(s) => return s,
+        };
+        let basis = if args.len() == 7 {
+            match self.get_number_no_bools(&args[6], cell) {
+                Ok(f) => f.trunc() as i32,
+                Err(s) => return s,
+            }
+        } else {
+            0
+        };
+        if let Err((error, message)) =
+            validate_security_dates_and_basis(settlement_serial, maturity_serial, basis)
+        {
+            return CalcResult::new_error(error, cell, message);
+        }
+        if let Err((error, message)) = validate_security_frequency(frequency) {
+            return CalcResult::new_error(error, cell, message);
+        }
+        if rate < 0.0 || price <= 0.0 || redemption <= 0.0 {
+            return CalcResult::new_error(Error::NUM, cell, "Invalid data for YIELD".to_string());
+        }
+        let result = match self.security_yield_value(
+            settlement_serial,
+            maturity_serial,
+            rate,
+            price,
+            redemption,
+            frequency,
+            basis,
+            cell,
+        ) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        Self::finish_financial_result(result, "YIELD", cell)
+    }
+
+    // YIELDDISC(settlement, maturity, pr, redemption, [basis])
+    pub(crate) fn fn_yielddisc(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
+        if !(4..=5).contains(&args.len()) {
+            return CalcResult::new_args_number_error(cell);
+        }
+        let settlement_serial = match self.get_number_no_bools(&args[0], cell) {
+            Ok(f) => f.floor() as i64,
+            Err(s) => return s,
+        };
+        let maturity_serial = match self.get_number_no_bools(&args[1], cell) {
+            Ok(f) => f.floor() as i64,
+            Err(s) => return s,
+        };
+        let price = match self.get_number_no_bools(&args[2], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let redemption = match self.get_number_no_bools(&args[3], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let basis = if args.len() == 5 {
+            match self.get_number_no_bools(&args[4], cell) {
+                Ok(f) => f.trunc() as i32,
+                Err(s) => return s,
+            }
+        } else {
+            0
+        };
+        if let Err((error, message)) =
+            validate_security_dates_and_basis(settlement_serial, maturity_serial, basis)
+        {
+            return CalcResult::new_error(error, cell, message);
+        }
+        if price <= 0.0 || redemption <= 0.0 {
+            return CalcResult::new_error(
+                Error::NUM,
+                cell,
+                "Invalid data for YIELDDISC".to_string(),
+            );
+        }
+        let year_fraction =
+            match self.year_fraction(settlement_serial, maturity_serial, basis, cell) {
+                Ok(f) => f,
+                Err(s) => return s,
+            };
+        let result = (redemption / price - 1.0) / year_fraction;
+        Self::finish_financial_result(result, "YIELDDISC", cell)
+    }
+
+    // YIELDMAT(settlement, maturity, issue, rate, pr, [basis])
+    pub(crate) fn fn_yieldmat(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
+        if !(5..=6).contains(&args.len()) {
+            return CalcResult::new_args_number_error(cell);
+        }
+        let settlement_serial = match self.get_number_no_bools(&args[0], cell) {
+            Ok(f) => f.floor() as i64,
+            Err(s) => return s,
+        };
+        let maturity_serial = match self.get_number_no_bools(&args[1], cell) {
+            Ok(f) => f.floor() as i64,
+            Err(s) => return s,
+        };
+        let issue_serial = match self.get_number_no_bools(&args[2], cell) {
+            Ok(f) => f.floor() as i64,
+            Err(s) => return s,
+        };
+        let rate = match self.get_number_no_bools(&args[3], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let price = match self.get_number_no_bools(&args[4], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let basis = if args.len() == 6 {
+            match self.get_number_no_bools(&args[5], cell) {
+                Ok(f) => f.trunc() as i32,
+                Err(s) => return s,
+            }
+        } else {
+            0
+        };
+        if let Err((error, message)) =
+            validate_security_dates_and_basis(settlement_serial, maturity_serial, basis)
+        {
+            return CalcResult::new_error(error, cell, message);
+        }
+        if settlement_serial < issue_serial || rate < 0.0 || price <= 0.0 {
+            return CalcResult::new_error(
+                Error::NUM,
+                cell,
+                "Invalid data for YIELDMAT".to_string(),
+            );
+        }
+        let iss_mat = match self.year_fraction(issue_serial, maturity_serial, basis, cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let iss_set = match self.year_fraction(issue_serial, settlement_serial, basis, cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let set_mat = match self.year_fraction(settlement_serial, maturity_serial, basis, cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let result = ((1.0 + iss_mat * rate) / (price / 100.0 + iss_set * rate) - 1.0) / set_mat;
+        Self::finish_financial_result(result, "YIELDMAT", cell)
     }
 
     // DISC(settlement, maturity, pr, redemption, [basis])
