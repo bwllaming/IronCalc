@@ -89,6 +89,18 @@ for Conductor's IronCalc adapter evidence.
 - `base/src/expressions/parser/static_analysis.rs`
   - Classifies `FVSCHEDULE` as scalar principal plus vector schedule input.
 
+## VDB Financial Formula
+
+- `base/src/functions/mod.rs`
+  - Registers the English `VDB` function name for Conductor financial formula
+    evidence without changing localized language payloads.
+- `base/src/functions/financial.rs`
+  - Adds scalar `VDB(cost, salvage, life, start_period, end_period, [factor],
+    [no_switch])` evaluation using declining-balance depreciation and the
+    straight-line switch option.
+- `base/src/expressions/parser/static_analysis.rs`
+  - Classifies `VDB` as scalar-only input.
+
 ## FORECAST.ETS.SEASONALITY Statistical Formula
 
 - `fork/sheets-engine/src/lib.rs`

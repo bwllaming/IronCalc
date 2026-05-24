@@ -1789,6 +1789,100 @@ impl<'a> Model<'a> {
         CalcResult::Number(result)
     }
 
+    // VDB(cost, salvage, life, start_period, end_period, [factor], [no_switch])
+    pub(crate) fn fn_vdb(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
+        let arg_count = args.len();
+        if !(5..=7).contains(&arg_count) {
+            return CalcResult::new_args_number_error(cell);
+        }
+        let cost = match self.get_number(&args[0], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let salvage = match self.get_number(&args[1], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let life = match self.get_number(&args[2], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let start_period = match self.get_number(&args[3], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let end_period = match self.get_number(&args[4], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let factor = if arg_count > 5 {
+            match self.get_number_no_bools(&args[5], cell) {
+                Ok(f) => f,
+                Err(s) => return s,
+            }
+        } else {
+            2.0
+        };
+        let no_switch = if arg_count > 6 {
+            match self.get_boolean(&args[6], cell) {
+                Ok(b) => b,
+                Err(s) => return s,
+            }
+        } else {
+            false
+        };
+
+        if cost < 0.0
+            || salvage < 0.0
+            || life <= 0.0
+            || start_period < 0.0
+            || end_period <= start_period
+            || end_period > life
+            || factor <= 0.0
+        {
+            return CalcResult::new_error(Error::NUM, cell, "invalid parameters".to_string());
+        }
+        if cost <= salvage {
+            return CalcResult::Number(0.0);
+        }
+
+        let rate = f64::min(factor / life, 1.0);
+        let mut accumulated_depreciation = 0.0;
+        let mut result = 0.0;
+        let last_period = end_period.ceil() as i32;
+
+        for period in 1..=last_period {
+            let period_start = f64::from(period - 1);
+            let period_end = f64::from(period);
+            let depreciable_remaining = f64::max(cost - salvage - accumulated_depreciation, 0.0);
+            if depreciable_remaining <= 0.0 {
+                break;
+            }
+
+            let book_value = cost - accumulated_depreciation;
+            let declining = f64::min(book_value * rate, depreciable_remaining);
+            let depreciation = if no_switch {
+                declining
+            } else {
+                let remaining_life = f64::max(life - period_start, 1.0);
+                f64::min(
+                    f64::max(declining, depreciable_remaining / remaining_life),
+                    depreciable_remaining,
+                )
+            };
+
+            let overlap_start = f64::max(start_period, period_start);
+            let overlap_end = f64::min(end_period, period_end);
+            if overlap_end > overlap_start {
+                result += depreciation * (overlap_end - overlap_start);
+            }
+
+            accumulated_depreciation += depreciation;
+        }
+
+        CalcResult::Number(result)
+    }
+
     // DB(cost, salvage, life, period, [month])
     pub(crate) fn fn_db(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
         let arg_count = args.len();
