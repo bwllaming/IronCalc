@@ -1465,6 +1465,79 @@ impl<'a> Model<'a> {
         CalcResult::Number(result)
     }
 
+    // ACCRINTM(issue, maturity, rate, par, [basis])
+    pub(crate) fn fn_accrintm(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
+        if !(4..=5).contains(&args.len()) {
+            return CalcResult::new_args_number_error(cell);
+        }
+        let issue = match self.get_number_no_bools(&args[0], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let maturity = match self.get_number_no_bools(&args[1], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let rate = match self.get_number_no_bools(&args[2], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let par = match self.get_number_no_bools(&args[3], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let basis = if args.len() == 5 {
+            match self.get_number_no_bools(&args[4], cell) {
+                Ok(f) => f.trunc() as i32,
+                Err(s) => return s,
+            }
+        } else {
+            0
+        };
+
+        if issue >= maturity {
+            return CalcResult::new_error(
+                Error::NUM,
+                cell,
+                "issue should be < maturity".to_string(),
+            );
+        }
+        if rate <= 0.0 {
+            return CalcResult::new_error(Error::NUM, cell, "rate should be > 0".to_string());
+        }
+        if par <= 0.0 {
+            return CalcResult::new_error(Error::NUM, cell, "par should be > 0".to_string());
+        }
+        if !(0..=4).contains(&basis) {
+            return CalcResult::new_error(Error::NUM, cell, "Invalid basis".to_string());
+        }
+
+        let year_fraction = match self.fn_yearfrac(
+            &[
+                args[0].clone(),
+                args[1].clone(),
+                Node::NumberKind(basis as f64),
+            ],
+            cell,
+        ) {
+            CalcResult::Number(f) => f,
+            s => return s,
+        };
+        let result = par * rate * year_fraction;
+        if result.is_infinite() {
+            return CalcResult::new_error(Error::DIV, cell, "Division by 0".to_string());
+        }
+        if result.is_nan() {
+            return CalcResult::new_error(
+                Error::NUM,
+                cell,
+                "Invalid data for ACCRINTM".to_string(),
+            );
+        }
+
+        CalcResult::Number(result)
+    }
+
     // DISC(settlement, maturity, pr, redemption, [basis])
     pub(crate) fn fn_disc(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
         if !(4..=5).contains(&args.len()) {
