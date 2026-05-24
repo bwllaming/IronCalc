@@ -215,6 +215,13 @@ for Conductor's IronCalc adapter evidence.
   - Classifies `PERCENTRANK.EXC` as vector-plus-scalar input with optional
     scalar significance and scalar output.
 
+## RATE Financial Formula
+
+- `base/src/functions/financial.rs`
+  - Accepts the sixth optional `guess` argument for `RATE(nper, pmt, pv, [fv],
+    [type], [guess])`. The implementation already parsed the value but rejected
+    six-argument calls before evaluation.
+
 ## FORECAST.LINEAR Statistical Formula
 
 - `base/src/functions/mod.rs`
