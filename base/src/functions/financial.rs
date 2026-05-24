@@ -1650,6 +1650,100 @@ impl<'a> Model<'a> {
         CalcResult::Number(depreciation)
     }
 
+    // AMORLINC(cost, date_purchased, first_period, salvage, period, rate, [basis])
+    pub(crate) fn fn_amorlinc(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
+        if !(6..=7).contains(&args.len()) {
+            return CalcResult::new_args_number_error(cell);
+        }
+        let cost = match self.get_number_no_bools(&args[0], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let date_purchased = match self.get_number_no_bools(&args[1], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let first_period = match self.get_number_no_bools(&args[2], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let salvage = match self.get_number_no_bools(&args[3], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let period = match self.get_number_no_bools(&args[4], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let rate = match self.get_number_no_bools(&args[5], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let basis = if args.len() == 7 {
+            match self.get_number_no_bools(&args[6], cell) {
+                Ok(f) => f.trunc() as i32,
+                Err(s) => return s,
+            }
+        } else {
+            0
+        };
+
+        if date_purchased > first_period
+            || rate <= 0.0
+            || salvage > cost
+            || cost <= 0.0
+            || salvage < 0.0
+            || period < 0.0
+        {
+            return CalcResult::new_error(
+                Error::NUM,
+                cell,
+                "Invalid data for AMORLINC".to_string(),
+            );
+        }
+        if !(0..=4).contains(&basis) {
+            return CalcResult::new_error(Error::NUM, cell, "Invalid basis".to_string());
+        }
+
+        let year_fraction = match self.fn_yearfrac(
+            &[
+                args[1].clone(),
+                args[2].clone(),
+                Node::NumberKind(basis as f64),
+            ],
+            cell,
+        ) {
+            CalcResult::Number(f) => f,
+            s => return s,
+        };
+
+        let annual_depreciation = cost * rate;
+        let first_depreciation = annual_depreciation * year_fraction;
+        let periods = period.trunc() as u32;
+        let mut remaining_depreciable = cost - salvage - first_depreciation;
+        let depreciation = if periods == 0 {
+            first_depreciation.min(cost - salvage).max(0.0)
+        } else {
+            for _ in 1..periods {
+                remaining_depreciable -= annual_depreciation.min(remaining_depreciable);
+            }
+            annual_depreciation.min(remaining_depreciable).max(0.0)
+        };
+
+        if depreciation.is_infinite() {
+            return CalcResult::new_error(Error::DIV, cell, "Division by 0".to_string());
+        }
+        if depreciation.is_nan() {
+            return CalcResult::new_error(
+                Error::NUM,
+                cell,
+                "Invalid data for AMORLINC".to_string(),
+            );
+        }
+
+        CalcResult::Number(depreciation)
+    }
+
     // DISC(settlement, maturity, pr, redemption, [basis])
     pub(crate) fn fn_disc(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
         if !(4..=5).contains(&args.len()) {

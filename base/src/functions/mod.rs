@@ -338,6 +338,7 @@ pub enum Function {
     Accrint,
     Accrintm,
     Amordegrc,
+    Amorlinc,
     Cumipmt,
     Cumprinc,
     Db,
@@ -529,6 +530,9 @@ macro_rules! impl_function_lookup {
                 }
                 if key == "AMORDEGRC" {
                     return Some(Function::Amordegrc);
+                }
+                if key == "AMORLINC" {
+                    return Some(Function::Amorlinc);
                 }
                 if key == "FVSCHEDULE" {
                     return Some(Function::Fvschedule);
@@ -1247,6 +1251,7 @@ impl Function {
             Function::Accrint => "ACCRINT".to_string(),
             Function::Accrintm => "ACCRINTM".to_string(),
             Function::Amordegrc => "AMORDEGRC".to_string(),
+            Function::Amorlinc => "AMORLINC".to_string(),
             Function::Cumipmt => functions.cumipmt.clone(),
             Function::Cumprinc => functions.cumprinc.clone(),
             Function::Db => functions.db.clone(),
@@ -1355,7 +1360,7 @@ impl Function {
             Function::Steyx => functions.steyx.clone(),
         }
     }
-    pub fn into_iter() -> IntoIter<Function, 391> {
+    pub fn into_iter() -> IntoIter<Function, 392> {
         [
             Function::And,
             Function::False,
@@ -1565,6 +1570,7 @@ impl Function {
             Function::Accrint,
             Function::Accrintm,
             Function::Amordegrc,
+            Function::Amorlinc,
             Function::Rri,
             Function::Sln,
             Function::Syd,
@@ -2110,6 +2116,7 @@ impl<'a> Model<'a> {
             Function::Accrint => self.fn_accrint(args, cell),
             Function::Accrintm => self.fn_accrintm(args, cell),
             Function::Amordegrc => self.fn_amordegrc(args, cell),
+            Function::Amorlinc => self.fn_amorlinc(args, cell),
             Function::Rri => self.fn_rri(args, cell),
             Function::Sln => self.fn_sln(args, cell),
             Function::Syd => self.fn_syd(args, cell),
