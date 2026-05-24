@@ -65,9 +65,9 @@ fn fn_impmt_ppmt_arguments() {
     assert_eq!(model._get_text("A2"), *"#ERROR!");
     assert_eq!(model._get_text("A3"), *"#ERROR!");
 
-    assert_eq!(model._get_text("B1"), *"#ERROR!");
-    assert_eq!(model._get_text("B2"), *"#ERROR!");
-    assert_eq!(model._get_text("B3"), *"#ERROR!");
+    assert_eq!(model._get_text("B1"), *"#NUM!");
+    assert_eq!(model._get_text("B2"), *"#NUM!");
+    assert_eq!(model._get_text("B3"), *"#NUM!");
 }
 
 #[test]
@@ -551,4 +551,34 @@ fn fn_db_misc() {
     model.evaluate();
 
     assert_eq!(model._get_text("B1"), "$0.00");
+}
+
+#[test]
+fn fn_coupdays() {
+    let mut model = new_empty_model();
+
+    model._set("A1", "=COUPDAYS(DATE(2024,3,1),DATE(2026,7,1),2,0)");
+    model._set("A2", "=COUPDAYS(DATE(2024,3,1),DATE(2026,7,1),2,1)");
+    model._set("A3", "=COUPDAYS(DATE(2024,3,1),DATE(2026,7,1),2,3)");
+    model._set("B1", "=COUPDAYS(DATE(2024,3,1),DATE(2026,7,1),3,0)");
+    model._set("B2", "=COUPDAYS(DATE(2026,7,1),DATE(2024,3,1),2,0)");
+    model._set("B3", "=COUPDAYS(DATE(2024,3,1),DATE(2026,7,1),2,5)");
+
+    model.evaluate();
+
+    assert_eq!(
+        model.get_cell_value_by_ref("Sheet1!A1"),
+        Ok(CellValue::Number(180.0))
+    );
+    assert_eq!(
+        model.get_cell_value_by_ref("Sheet1!A2"),
+        Ok(CellValue::Number(182.0))
+    );
+    assert_eq!(
+        model.get_cell_value_by_ref("Sheet1!A3"),
+        Ok(CellValue::Number(182.5))
+    );
+    assert_eq!(model._get_text("B1"), *"#NUM!");
+    assert_eq!(model._get_text("B2"), *"#NUM!");
+    assert_eq!(model._get_text("B3"), *"#NUM!");
 }

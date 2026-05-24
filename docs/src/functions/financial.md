@@ -16,7 +16,7 @@ You can track the progress in this [GitHub issue](https://github.com/ironcalc/Ir
 | AMORDEGRC  | <Badge type="tip" text="Available" />          | –                  |
 | AMORLINC   | <Badge type="info" text="Not implemented yet" /> | –                  |
 | COUPDAYBS  | <Badge type="tip" text="Available" />          | [COUPDAYBS](financial/coupdaybs) |
-| COUPDAYS   | <Badge type="info" text="Not implemented yet" /> | –                  |
+| COUPDAYS   | <Badge type="tip" text="Available" />          | [COUPDAYS](financial/coupdays) |
 | COUPDAYSNC | <Badge type="info" text="Not implemented yet" /> | –                  |
 | COUPNCD    | <Badge type="info" text="Not implemented yet" /> | –                  |
 | COUPNUM    | <Badge type="info" text="Not implemented yet" /> | –                  |
