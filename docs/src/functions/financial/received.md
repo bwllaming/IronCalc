@@ -6,7 +6,4 @@ lang: en-US
 
 # RECEIVED
 
-::: warning
-🚧 This function is not yet available in IronCalc.
-[Follow development here](https://github.com/ironcalc/IronCalc/labels/Functions)
-:::
+Returns the amount received at maturity for a fully invested security.

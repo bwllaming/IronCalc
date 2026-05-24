@@ -53,7 +53,7 @@ You can track the progress in this [GitHub issue](https://github.com/ironcalc/Ir
 | PRICEMAT   | <Badge type="info" text="Not implemented yet" /> | –                  |
 | PV         | <Badge type="tip" text="Available" />          | [PV](financial/pv) |
 | RATE       | <Badge type="tip" text="Available" />          | –                  |
-| RECEIVED   | <Badge type="info" text="Not implemented yet" /> | –                  |
+| RECEIVED   | <Badge type="tip" text="Available" />          | –                  |
 | RRI        | <Badge type="tip" text="Available" />          | -                  |
 | SLN        | <Badge type="tip" text="Available" />          | –                  |
 | SYD        | <Badge type="tip" text="Available" />          | –                  |

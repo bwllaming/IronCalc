@@ -341,6 +341,7 @@ pub enum Function {
     Ddb,
     Disc,
     Intrate,
+    Received,
     Vdb,
     Dollarde,
     Dollarfr,
@@ -528,6 +529,9 @@ macro_rules! impl_function_lookup {
                 }
                 if key == "INTRATE" {
                     return Some(Function::Intrate);
+                }
+                if key == "RECEIVED" {
+                    return Some(Function::Received);
                 }
                 $(
                     if self.$field == key {
@@ -1234,6 +1238,7 @@ impl Function {
             Function::Ddb => functions.ddb.clone(),
             Function::Disc => "DISC".to_string(),
             Function::Intrate => "INTRATE".to_string(),
+            Function::Received => "RECEIVED".to_string(),
             Function::Vdb => "VDB".to_string(),
             Function::Dollarde => functions.dollarde.clone(),
             Function::Dollarfr => functions.dollarfr.clone(),
@@ -1335,7 +1340,7 @@ impl Function {
             Function::Steyx => functions.steyx.clone(),
         }
     }
-    pub fn into_iter() -> IntoIter<Function, 387> {
+    pub fn into_iter() -> IntoIter<Function, 388> {
         [
             Function::And,
             Function::False,
@@ -1557,6 +1562,7 @@ impl Function {
             Function::Ddb,
             Function::Disc,
             Function::Intrate,
+            Function::Received,
             Function::Vdb,
             Function::Db,
             Function::Cumprinc,
@@ -2098,6 +2104,7 @@ impl<'a> Model<'a> {
             Function::Ddb => self.fn_ddb(args, cell),
             Function::Disc => self.fn_disc(args, cell),
             Function::Intrate => self.fn_intrate(args, cell),
+            Function::Received => self.fn_received(args, cell),
             Function::Vdb => self.fn_vdb(args, cell),
             Function::Db => self.fn_db(args, cell),
             Function::Cumprinc => self.fn_cumprinc(args, cell),
