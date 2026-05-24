@@ -180,6 +180,27 @@ fn fn_rri() {
 }
 
 #[test]
+fn fn_fvschedule() {
+    let mut model = new_empty_model();
+    model._set("A1", "0.02");
+    model._set("A2", "0.03");
+    model._set("A3", "0.04");
+
+    model._set("B1", "=FVSCHEDULE(1000,A1:A3)");
+    model._set("B2", "=FVSCHEDULE(1000)");
+    model._set("B3", "=FVSCHEDULE(1000,A1:A3,1)");
+
+    model.evaluate();
+
+    assert_eq!(
+        model.get_cell_value_by_ref("Sheet1!B1"),
+        Ok(CellValue::Number(1092.624))
+    );
+    assert_eq!(model._get_text("B2"), *"#ERROR!");
+    assert_eq!(model._get_text("B3"), *"#ERROR!");
+}
+
+#[test]
 fn fn_sln() {
     let mut model = new_empty_model();
     model._set("A1", "1"); // cost

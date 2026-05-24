@@ -342,6 +342,7 @@ pub enum Function {
     Dollarde,
     Dollarfr,
     Effect,
+    Fvschedule,
     Fv,
     Ipmt,
     Irr,
@@ -512,6 +513,9 @@ macro_rules! impl_function_lookup {
                 }
                 if key == "TRIMMEAN" {
                     return Some(Function::Trimmean);
+                }
+                if key == "FVSCHEDULE" {
+                    return Some(Function::Fvschedule);
                 }
                 $(
                     if self.$field == key {
@@ -1219,6 +1223,7 @@ impl Function {
             Function::Dollarde => functions.dollarde.clone(),
             Function::Dollarfr => functions.dollarfr.clone(),
             Function::Effect => functions.effect.clone(),
+            Function::Fvschedule => "FVSCHEDULE".to_string(),
             Function::Fv => functions.fv.clone(),
             Function::Ipmt => functions.ipmt.clone(),
             Function::Irr => functions.irr.clone(),
@@ -1315,7 +1320,7 @@ impl Function {
             Function::Steyx => functions.steyx.clone(),
         }
     }
-    pub fn into_iter() -> IntoIter<Function, 383> {
+    pub fn into_iter() -> IntoIter<Function, 384> {
         [
             Function::And,
             Function::False,
@@ -1527,6 +1532,7 @@ impl Function {
             Function::Syd,
             Function::Nominal,
             Function::Effect,
+            Function::Fvschedule,
             Function::Pduration,
             Function::Tbillyield,
             Function::Tbillprice,
@@ -1872,6 +1878,7 @@ impl Function {
             Function::Address => Some("ADDRESS".to_string()),
             Function::Hyperlink => Some("HYPERLINK".to_string()),
             Function::Numbervalue => Some("NUMBERVALUE".to_string()),
+            Function::Fvschedule => Some("FVSCHEDULE".to_string()),
             Function::Proper => Some("PROPER".to_string()),
             Function::Replace => Some("REPLACE".to_string()),
             _ => None,
@@ -2062,6 +2069,7 @@ impl<'a> Model<'a> {
             Function::Syd => self.fn_syd(args, cell),
             Function::Nominal => self.fn_nominal(args, cell),
             Function::Effect => self.fn_effect(args, cell),
+            Function::Fvschedule => self.fn_fvschedule(args, cell),
             Function::Pduration => self.fn_pduration(args, cell),
             Function::Tbillyield => self.fn_tbillyield(args, cell),
             Function::Tbillprice => self.fn_tbillprice(args, cell),

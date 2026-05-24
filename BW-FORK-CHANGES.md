@@ -78,6 +78,17 @@ for Conductor's IronCalc adapter evidence.
     `CalcEngine` returns the checked Excel `#N/A` value while the upstream
     IronCalc function registry remains missing the function.
 
+## FVSCHEDULE Financial Formula
+
+- `base/src/functions/mod.rs`
+  - Registers the English `FVSCHEDULE` function name for Conductor financial
+    formula evidence without changing localized language payloads.
+- `base/src/functions/financial.rs`
+  - Adds scalar `FVSCHEDULE(principal, schedule)` evaluation by compounding the
+    principal over numeric schedule values.
+- `base/src/expressions/parser/static_analysis.rs`
+  - Classifies `FVSCHEDULE` as scalar principal plus vector schedule input.
+
 ## FORECAST.ETS.SEASONALITY Statistical Formula
 
 - `fork/sheets-engine/src/lib.rs`

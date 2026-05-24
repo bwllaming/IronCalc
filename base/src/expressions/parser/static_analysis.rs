@@ -986,6 +986,13 @@ fn get_function_args_signature(kind: &Function, arg_count: usize) -> Vec<Signatu
         Function::Dollarde => args_signature_scalars(arg_count, 2, 0),
         Function::Dollarfr => args_signature_scalars(arg_count, 2, 0),
         Function::Effect => args_signature_scalars(arg_count, 2, 0),
+        Function::Fvschedule => {
+            if arg_count == 2 {
+                vec![Signature::Scalar, Signature::Vector]
+            } else {
+                vec![Signature::Error; arg_count]
+            }
+        }
         Function::Fv => args_signature_scalars(arg_count, 3, 2),
         Function::Ipmt => args_signature_scalars(arg_count, 4, 2),
         Function::Irr => args_signature_irr(arg_count),
@@ -1429,6 +1436,7 @@ fn static_analysis_on_function(kind: &Function, args: &[Node]) -> StaticResult {
         Function::Dollarde => not_implemented(args),
         Function::Dollarfr => not_implemented(args),
         Function::Effect => not_implemented(args),
+        Function::Fvschedule => not_implemented(args),
         Function::Fv => not_implemented(args),
         Function::Ipmt => not_implemented(args),
         Function::Irr => not_implemented(args),

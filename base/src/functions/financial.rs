@@ -641,6 +641,32 @@ impl<'a> Model<'a> {
         }
     }
 
+    // FVSCHEDULE(principal, schedule)
+    pub(crate) fn fn_fvschedule(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
+        if args.len() != 2 {
+            return CalcResult::new_args_number_error(cell);
+        }
+        let principal = match self.get_number(&args[0], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let schedule = match self.get_array_of_numbers(&args[1], &cell) {
+            Ok(values) => values,
+            Err(error) => return error,
+        };
+        let mut future_value = principal;
+        for rate in schedule {
+            future_value *= 1.0 + rate;
+        }
+        if future_value.is_nan() {
+            return CalcResult::new_error(Error::NUM, cell, "Invalid result".to_string());
+        }
+        if !future_value.is_finite() {
+            return CalcResult::new_error(Error::DIV, cell, "Divide by zero".to_string());
+        }
+        CalcResult::Number(future_value)
+    }
+
     // IPMT(rate, per, nper, pv, [fv], [type])
     pub(crate) fn fn_ipmt(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
         let arg_count = args.len();
