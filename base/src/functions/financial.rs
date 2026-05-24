@@ -1432,6 +1432,73 @@ impl<'a> Model<'a> {
         CalcResult::Number(result)
     }
 
+    // INTRATE(settlement, maturity, investment, redemption, [basis])
+    pub(crate) fn fn_intrate(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
+        if !(4..=5).contains(&args.len()) {
+            return CalcResult::new_args_number_error(cell);
+        }
+        let settlement = match self.get_number_no_bools(&args[0], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let maturity = match self.get_number_no_bools(&args[1], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let investment = match self.get_number_no_bools(&args[2], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let redemption = match self.get_number_no_bools(&args[3], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let basis = if args.len() == 5 {
+            match self.get_number_no_bools(&args[4], cell) {
+                Ok(f) => f.trunc() as i32,
+                Err(s) => return s,
+            }
+        } else {
+            0
+        };
+        if settlement >= maturity {
+            return CalcResult::new_error(
+                Error::NUM,
+                cell,
+                "settlement should be < maturity".to_string(),
+            );
+        }
+        if investment <= 0.0 {
+            return CalcResult::new_error(Error::NUM, cell, "investment should be > 0".to_string());
+        }
+        if redemption <= 0.0 {
+            return CalcResult::new_error(Error::NUM, cell, "redemption should be > 0".to_string());
+        }
+        if !(0..=4).contains(&basis) {
+            return CalcResult::new_error(Error::NUM, cell, "Invalid basis".to_string());
+        }
+        let year_fraction = match self.fn_yearfrac(
+            &[
+                args[0].clone(),
+                args[1].clone(),
+                Node::NumberKind(basis as f64),
+            ],
+            cell,
+        ) {
+            CalcResult::Number(f) => f,
+            s => return s,
+        };
+        let result = ((redemption - investment) / investment) / year_fraction;
+        if result.is_infinite() {
+            return CalcResult::new_error(Error::DIV, cell, "Division by 0".to_string());
+        }
+        if result.is_nan() {
+            return CalcResult::new_error(Error::NUM, cell, "Invalid data for INTRATE".to_string());
+        }
+
+        CalcResult::Number(result)
+    }
+
     // This next three functions deal with Treasure Bills or T-Bills for short
     // They are zero-coupon that mature in one year or less.
     //  Definitions:

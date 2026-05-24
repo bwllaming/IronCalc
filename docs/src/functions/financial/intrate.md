@@ -6,7 +6,4 @@ lang: en-US
 
 # INTRATE
 
-::: warning
-🚧 This function is not yet available in IronCalc.
-[Follow development here](https://github.com/ironcalc/IronCalc/labels/Functions)
-:::
+Returns the interest rate for a fully invested security.

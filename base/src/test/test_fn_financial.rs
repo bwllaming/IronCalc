@@ -361,6 +361,27 @@ fn fn_disc() {
 }
 
 #[test]
+fn fn_intrate() {
+    let mut model = new_empty_model();
+    model._set("A2", "=DATE(2024,1,1)");
+    model._set("A3", "=DATE(2024,7,1)");
+    model._set("A4", "970");
+    model._set("A5", "1000");
+
+    model._set("B1", "=INTRATE(A2,A3,A4,A5,0)");
+
+    model._set("C1", "=INTRATE(A2,A3,A4)");
+    model._set("C2", "=INTRATE(A2,A3,A4,A5,5)");
+
+    model.evaluate();
+
+    assert_eq!(model._get_text("B1"), "6.19%");
+
+    assert_eq!(model._get_text("C1"), *"#ERROR!");
+    assert_eq!(model._get_text("C2"), *"#NUM!");
+}
+
+#[test]
 fn fn_tbilleq() {
     let mut model = new_empty_model();
     model._set("A2", "=DATE(2008, 3, 31)"); // settlement date
