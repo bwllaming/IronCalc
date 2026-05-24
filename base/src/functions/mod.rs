@@ -342,6 +342,7 @@ pub enum Function {
     Coupdaybs,
     Coupdays,
     Coupdaysnc,
+    Coupncd,
     Cumipmt,
     Cumprinc,
     Db,
@@ -545,6 +546,9 @@ macro_rules! impl_function_lookup {
                 }
                 if key == "COUPDAYSNC" {
                     return Some(Function::Coupdaysnc);
+                }
+                if key == "COUPNCD" {
+                    return Some(Function::Coupncd);
                 }
                 if key == "FVSCHEDULE" {
                     return Some(Function::Fvschedule);
@@ -1267,6 +1271,7 @@ impl Function {
             Function::Coupdaybs => "COUPDAYBS".to_string(),
             Function::Coupdays => "COUPDAYS".to_string(),
             Function::Coupdaysnc => "COUPDAYSNC".to_string(),
+            Function::Coupncd => "COUPNCD".to_string(),
             Function::Cumipmt => functions.cumipmt.clone(),
             Function::Cumprinc => functions.cumprinc.clone(),
             Function::Db => functions.db.clone(),
@@ -2137,6 +2142,7 @@ impl<'a> Model<'a> {
             Function::Coupdaybs => self.fn_coupdaybs(args, cell),
             Function::Coupdays => self.fn_coupdays(args, cell),
             Function::Coupdaysnc => self.fn_coupdaysnc(args, cell),
+            Function::Coupncd => self.fn_coupncd(args, cell),
             Function::Rri => self.fn_rri(args, cell),
             Function::Sln => self.fn_sln(args, cell),
             Function::Syd => self.fn_syd(args, cell),

@@ -612,3 +612,33 @@ fn fn_coupdaysnc() {
     assert_eq!(model._get_text("B2"), *"#NUM!");
     assert_eq!(model._get_text("B3"), *"#NUM!");
 }
+
+#[test]
+fn fn_coupncd() {
+    let mut model = new_empty_model();
+
+    model._set("A1", "=COUPNCD(DATE(2024,3,1),DATE(2026,7,1),2,0)");
+    model._set("A2", "=COUPNCD(DATE(2024,3,1),DATE(2026,7,1),2,1)");
+    model._set("A3", "=COUPNCD(DATE(2024,3,1),DATE(2026,7,1),2,3)");
+    model._set("B1", "=COUPNCD(DATE(2024,3,1),DATE(2026,7,1),3,0)");
+    model._set("B2", "=COUPNCD(DATE(2026,7,1),DATE(2024,3,1),2,0)");
+    model._set("B3", "=COUPNCD(DATE(2024,3,1),DATE(2026,7,1),2,5)");
+
+    model.evaluate();
+
+    assert_eq!(
+        model.get_cell_value_by_ref("Sheet1!A1"),
+        Ok(CellValue::Number(45474.0))
+    );
+    assert_eq!(
+        model.get_cell_value_by_ref("Sheet1!A2"),
+        Ok(CellValue::Number(45474.0))
+    );
+    assert_eq!(
+        model.get_cell_value_by_ref("Sheet1!A3"),
+        Ok(CellValue::Number(45474.0))
+    );
+    assert_eq!(model._get_text("B1"), *"#NUM!");
+    assert_eq!(model._get_text("B2"), *"#NUM!");
+    assert_eq!(model._get_text("B3"), *"#NUM!");
+}

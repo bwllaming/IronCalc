@@ -6,7 +6,16 @@ lang: en-US
 
 # COUPNCD
 
-::: warning
-🚧 This function is not yet available in IronCalc.
-[Follow development here](https://github.com/ironcalc/IronCalc/labels/Functions)
-:::
+Returns the next coupon date after the settlement date.
+
+## Syntax
+
+```text
+COUPNCD(settlement, maturity, frequency, [basis])
+```
+
+## Example
+
+```text
+=COUPNCD(DATE(2024,3,1),DATE(2026,7,1),2,0)
+```
