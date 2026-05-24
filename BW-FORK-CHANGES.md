@@ -182,6 +182,19 @@ for Conductor's IronCalc adapter evidence.
 - `base/src/expressions/parser/static_analysis.rs`
   - Classifies `AMORLINC` as scalar-only input with optional basis.
 
+## COUPDAYBS Financial Formula
+
+- `base/src/functions/mod.rs`
+  - Registers the English `COUPDAYBS` function name for Conductor financial
+    formula evidence without changing localized language payloads.
+- `base/src/functions/financial.rs`
+  - Adds scalar `COUPDAYBS(settlement, maturity, frequency, [basis])`
+    evaluation for days from the previous coupon date to settlement, using
+    30/360 handling for basis 0 and 4 and actual-day handling for basis 1, 2,
+    and 3.
+- `base/src/expressions/parser/static_analysis.rs`
+  - Classifies `COUPDAYBS` as scalar-only input with optional basis.
+
 ## FORECAST.ETS.SEASONALITY Statistical Formula
 
 - `fork/sheets-engine/src/lib.rs`

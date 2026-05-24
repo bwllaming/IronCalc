@@ -6,7 +6,11 @@ lang: en-US
 
 # COUPDAYBS
 
-::: warning
-🚧 This function is not yet available in IronCalc.
-[Follow development here](https://github.com/ironcalc/IronCalc/labels/Functions)
-:::
+Returns the number of days from the beginning of the coupon period to the
+settlement date.
+
+## Syntax
+
+```plaintext
+COUPDAYBS(settlement, maturity, frequency, [basis])
+```
