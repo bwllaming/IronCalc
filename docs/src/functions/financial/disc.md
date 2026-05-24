@@ -6,7 +6,4 @@ lang: en-US
 
 # DISC
 
-::: warning
-🚧 This function is not yet available in IronCalc.
-[Follow development here](https://github.com/ironcalc/IronCalc/labels/Functions)
-:::
+Returns the discount rate for a security.

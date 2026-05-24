@@ -101,6 +101,17 @@ for Conductor's IronCalc adapter evidence.
 - `base/src/expressions/parser/static_analysis.rs`
   - Classifies `VDB` as scalar-only input.
 
+## DISC Financial Formula
+
+- `base/src/functions/mod.rs`
+  - Registers the English `DISC` function name for Conductor financial formula
+    evidence without changing localized language payloads.
+- `base/src/functions/financial.rs`
+  - Adds scalar `DISC(settlement, maturity, pr, redemption, [basis])`
+    evaluation using the existing Excel date-basis year fraction helper.
+- `base/src/expressions/parser/static_analysis.rs`
+  - Classifies `DISC` as scalar-only input with optional basis.
+
 ## FORECAST.ETS.SEASONALITY Statistical Formula
 
 - `fork/sheets-engine/src/lib.rs`

@@ -340,6 +340,27 @@ fn fn_ddb() {
 }
 
 #[test]
+fn fn_disc() {
+    let mut model = new_empty_model();
+    model._set("A2", "=DATE(2024,1,1)");
+    model._set("A3", "=DATE(2024,7,1)");
+    model._set("A4", "97.5");
+    model._set("A5", "100");
+
+    model._set("B1", "=DISC(A2,A3,A4,A5,0)");
+
+    model._set("C1", "=DISC(A2,A3,A4)");
+    model._set("C2", "=DISC(A2,A3,A4,A5,5)");
+
+    model.evaluate();
+
+    assert_eq!(model._get_text("B1"), "5.00%");
+
+    assert_eq!(model._get_text("C1"), *"#ERROR!");
+    assert_eq!(model._get_text("C2"), *"#NUM!");
+}
+
+#[test]
 fn fn_tbilleq() {
     let mut model = new_empty_model();
     model._set("A2", "=DATE(2008, 3, 31)"); // settlement date

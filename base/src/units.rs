@@ -327,6 +327,7 @@ impl<'a> Model<'a> {
             Function::Ddb => self.units_fn_currency(args, cell),
             Function::Cumipmt => self.units_fn_currency(args, cell),
             Function::Cumprinc => self.units_fn_currency(args, cell),
+            Function::Disc => self.units_fn_percentage_2(args, cell),
             Function::Tbilleq => self.units_fn_percentage_2(args, cell),
             Function::Tbillprice => self.units_fn_currency(args, cell),
             Function::Tbillyield => self.units_fn_percentage_2(args, cell),

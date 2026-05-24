@@ -339,6 +339,7 @@ pub enum Function {
     Cumprinc,
     Db,
     Ddb,
+    Disc,
     Vdb,
     Dollarde,
     Dollarfr,
@@ -520,6 +521,9 @@ macro_rules! impl_function_lookup {
                 }
                 if key == "VDB" {
                     return Some(Function::Vdb);
+                }
+                if key == "DISC" {
+                    return Some(Function::Disc);
                 }
                 $(
                     if self.$field == key {
@@ -1224,6 +1228,7 @@ impl Function {
             Function::Cumprinc => functions.cumprinc.clone(),
             Function::Db => functions.db.clone(),
             Function::Ddb => functions.ddb.clone(),
+            Function::Disc => "DISC".to_string(),
             Function::Vdb => "VDB".to_string(),
             Function::Dollarde => functions.dollarde.clone(),
             Function::Dollarfr => functions.dollarfr.clone(),
@@ -1325,7 +1330,7 @@ impl Function {
             Function::Steyx => functions.steyx.clone(),
         }
     }
-    pub fn into_iter() -> IntoIter<Function, 385> {
+    pub fn into_iter() -> IntoIter<Function, 386> {
         [
             Function::And,
             Function::False,
@@ -1545,6 +1550,7 @@ impl Function {
             Function::Dollarde,
             Function::Dollarfr,
             Function::Ddb,
+            Function::Disc,
             Function::Vdb,
             Function::Db,
             Function::Cumprinc,
@@ -2084,6 +2090,7 @@ impl<'a> Model<'a> {
             Function::Dollarde => self.fn_dollarde(args, cell),
             Function::Dollarfr => self.fn_dollarfr(args, cell),
             Function::Ddb => self.fn_ddb(args, cell),
+            Function::Disc => self.fn_disc(args, cell),
             Function::Vdb => self.fn_vdb(args, cell),
             Function::Db => self.fn_db(args, cell),
             Function::Cumprinc => self.fn_cumprinc(args, cell),

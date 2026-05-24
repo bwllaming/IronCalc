@@ -25,7 +25,7 @@ You can track the progress in this [GitHub issue](https://github.com/ironcalc/Ir
 | CUMPRINC   | <Badge type="tip" text="Available" />          | –                  |
 | DB         | <Badge type="tip" text="Available" />          | –                  |
 | DDB        | <Badge type="tip" text="Available" />          | –                  |
-| DISC       | <Badge type="info" text="Not implemented yet" /> | –                  |
+| DISC       | <Badge type="tip" text="Available" />          | –                  |
 | DOLLARDE   | <Badge type="tip" text="Available" />          | –                  |
 | DOLLARFR   | <Badge type="tip" text="Available" />          | –                  |
 | DURATION   | <Badge type="info" text="Not implemented yet" /> | –                  |
