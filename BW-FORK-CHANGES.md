@@ -231,6 +231,18 @@ for Conductor's IronCalc adapter evidence.
 - `base/src/expressions/parser/static_analysis.rs`
   - Classifies `COUPNCD` as scalar-only input with optional basis.
 
+## COUPNUM Financial Formula
+
+- `base/src/functions/mod.rs`
+  - Registers the English `COUPNUM` function name for Conductor financial
+    formula evidence without changing localized language payloads.
+- `base/src/functions/financial.rs`
+  - Adds scalar `COUPNUM(settlement, maturity, frequency, [basis])`
+    evaluation for the number of coupon payments between settlement and
+    maturity.
+- `base/src/expressions/parser/static_analysis.rs`
+  - Classifies `COUPNUM` as scalar-only input with optional basis.
+
 ## FORECAST.ETS.SEASONALITY Statistical Formula
 
 - `fork/sheets-engine/src/lib.rs`

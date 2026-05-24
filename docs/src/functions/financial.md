@@ -19,7 +19,7 @@ You can track the progress in this [GitHub issue](https://github.com/ironcalc/Ir
 | COUPDAYS   | <Badge type="tip" text="Available" />          | [COUPDAYS](financial/coupdays) |
 | COUPDAYSNC | <Badge type="tip" text="Available" />          | [COUPDAYSNC](financial/coupdaysnc) |
 | COUPNCD    | <Badge type="info" text="Not implemented yet" /> | –                  |
-| COUPNUM    | <Badge type="info" text="Not implemented yet" /> | –                  |
+| COUPNUM    | <Badge type="tip" text="Available" />          | [COUPNUM](financial/coupnum) |
 | COUPPCD    | <Badge type="info" text="Not implemented yet" /> | –                  |
 | CUMIPMT    | <Badge type="tip" text="Available" />          | –                  |
 | CUMPRINC   | <Badge type="tip" text="Available" />          | –                  |
