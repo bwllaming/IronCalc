@@ -341,6 +341,7 @@ pub enum Function {
     Amorlinc,
     Coupdaybs,
     Coupdays,
+    Coupdaysnc,
     Cumipmt,
     Cumprinc,
     Db,
@@ -541,6 +542,9 @@ macro_rules! impl_function_lookup {
                 }
                 if key == "COUPDAYS" {
                     return Some(Function::Coupdays);
+                }
+                if key == "COUPDAYSNC" {
+                    return Some(Function::Coupdaysnc);
                 }
                 if key == "FVSCHEDULE" {
                     return Some(Function::Fvschedule);
@@ -1262,6 +1266,7 @@ impl Function {
             Function::Amorlinc => "AMORLINC".to_string(),
             Function::Coupdaybs => "COUPDAYBS".to_string(),
             Function::Coupdays => "COUPDAYS".to_string(),
+            Function::Coupdaysnc => "COUPDAYSNC".to_string(),
             Function::Cumipmt => functions.cumipmt.clone(),
             Function::Cumprinc => functions.cumprinc.clone(),
             Function::Db => functions.db.clone(),
@@ -1370,7 +1375,7 @@ impl Function {
             Function::Steyx => functions.steyx.clone(),
         }
     }
-    pub fn into_iter() -> IntoIter<Function, 393> {
+    pub fn into_iter() -> IntoIter<Function, 394> {
         [
             Function::And,
             Function::False,
@@ -1582,6 +1587,7 @@ impl Function {
             Function::Amordegrc,
             Function::Amorlinc,
             Function::Coupdaybs,
+            Function::Coupdaysnc,
             Function::Rri,
             Function::Sln,
             Function::Syd,
@@ -2130,6 +2136,7 @@ impl<'a> Model<'a> {
             Function::Amorlinc => self.fn_amorlinc(args, cell),
             Function::Coupdaybs => self.fn_coupdaybs(args, cell),
             Function::Coupdays => self.fn_coupdays(args, cell),
+            Function::Coupdaysnc => self.fn_coupdaysnc(args, cell),
             Function::Rri => self.fn_rri(args, cell),
             Function::Sln => self.fn_sln(args, cell),
             Function::Syd => self.fn_syd(args, cell),

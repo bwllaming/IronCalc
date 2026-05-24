@@ -208,6 +208,18 @@ for Conductor's IronCalc adapter evidence.
 - `base/src/expressions/parser/static_analysis.rs`
   - Classifies `COUPDAYS` as scalar-only input with optional basis.
 
+## COUPDAYSNC Financial Formula
+
+- `base/src/functions/mod.rs`
+  - Registers the English `COUPDAYSNC` function name for Conductor financial
+    formula evidence without changing localized language payloads.
+- `base/src/functions/financial.rs`
+  - Adds scalar `COUPDAYSNC(settlement, maturity, frequency, [basis])`
+    evaluation for days from settlement to the next coupon date, using 30/360
+    handling for basis 0 and 4 and actual-day handling for basis 1, 2, and 3.
+- `base/src/expressions/parser/static_analysis.rs`
+  - Classifies `COUPDAYSNC` as scalar-only input with optional basis.
+
 ## FORECAST.ETS.SEASONALITY Statistical Formula
 
 - `fork/sheets-engine/src/lib.rs`
