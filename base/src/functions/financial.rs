@@ -1365,6 +1365,106 @@ impl<'a> Model<'a> {
         CalcResult::Number(result)
     }
 
+    // ACCRINT(issue, first_interest, settlement, rate, par, frequency, [basis], [calc_method])
+    pub(crate) fn fn_accrint(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
+        if !(6..=8).contains(&args.len()) {
+            return CalcResult::new_args_number_error(cell);
+        }
+        let issue = match self.get_number_no_bools(&args[0], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let first_interest = match self.get_number_no_bools(&args[1], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let settlement = match self.get_number_no_bools(&args[2], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let rate = match self.get_number_no_bools(&args[3], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let par = match self.get_number_no_bools(&args[4], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let frequency = match self.get_number_no_bools(&args[5], cell) {
+            Ok(f) => f.trunc() as i32,
+            Err(s) => return s,
+        };
+        let basis = if args.len() >= 7 {
+            match self.get_number_no_bools(&args[6], cell) {
+                Ok(f) => f.trunc() as i32,
+                Err(s) => return s,
+            }
+        } else {
+            0
+        };
+        let calc_method = if args.len() == 8 {
+            match self.get_boolean(&args[7], cell) {
+                Ok(b) => b,
+                Err(s) => return s,
+            }
+        } else {
+            true
+        };
+
+        if issue >= settlement {
+            return CalcResult::new_error(
+                Error::NUM,
+                cell,
+                "issue should be < settlement".to_string(),
+            );
+        }
+        if issue >= first_interest {
+            return CalcResult::new_error(
+                Error::NUM,
+                cell,
+                "issue should be < first_interest".to_string(),
+            );
+        }
+        if rate <= 0.0 {
+            return CalcResult::new_error(Error::NUM, cell, "rate should be > 0".to_string());
+        }
+        if par <= 0.0 {
+            return CalcResult::new_error(Error::NUM, cell, "par should be > 0".to_string());
+        }
+        if !matches!(frequency, 1 | 2 | 4) {
+            return CalcResult::new_error(Error::NUM, cell, "Invalid frequency".to_string());
+        }
+        if !(0..=4).contains(&basis) {
+            return CalcResult::new_error(Error::NUM, cell, "Invalid basis".to_string());
+        }
+
+        let accrual_start = if calc_method || settlement <= first_interest {
+            issue
+        } else {
+            first_interest
+        };
+        let year_fraction = match self.fn_yearfrac(
+            &[
+                Node::NumberKind(accrual_start),
+                args[2].clone(),
+                Node::NumberKind(basis as f64),
+            ],
+            cell,
+        ) {
+            CalcResult::Number(f) => f,
+            s => return s,
+        };
+        let result = par * rate * year_fraction;
+        if result.is_infinite() {
+            return CalcResult::new_error(Error::DIV, cell, "Division by 0".to_string());
+        }
+        if result.is_nan() {
+            return CalcResult::new_error(Error::NUM, cell, "Invalid data for ACCRINT".to_string());
+        }
+
+        CalcResult::Number(result)
+    }
+
     // DISC(settlement, maturity, pr, redemption, [basis])
     pub(crate) fn fn_disc(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
         if !(4..=5).contains(&args.len()) {

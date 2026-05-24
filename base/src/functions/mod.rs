@@ -335,6 +335,7 @@ pub enum Function {
     Isoweeknum,
 
     // Financial
+    Accrint,
     Cumipmt,
     Cumprinc,
     Db,
@@ -517,6 +518,9 @@ macro_rules! impl_function_lookup {
                 }
                 if key == "TRIMMEAN" {
                     return Some(Function::Trimmean);
+                }
+                if key == "ACCRINT" {
+                    return Some(Function::Accrint);
                 }
                 if key == "FVSCHEDULE" {
                     return Some(Function::Fvschedule);
@@ -1232,6 +1236,7 @@ impl Function {
             Function::WorkdayIntl => functions.workdayintl.clone(),
             Function::Yearfrac => functions.yearfrac.clone(),
             Function::Isoweeknum => functions.isoweeknum.clone(),
+            Function::Accrint => "ACCRINT".to_string(),
             Function::Cumipmt => functions.cumipmt.clone(),
             Function::Cumprinc => functions.cumprinc.clone(),
             Function::Db => functions.db.clone(),
@@ -1340,7 +1345,7 @@ impl Function {
             Function::Steyx => functions.steyx.clone(),
         }
     }
-    pub fn into_iter() -> IntoIter<Function, 388> {
+    pub fn into_iter() -> IntoIter<Function, 389> {
         [
             Function::And,
             Function::False,
@@ -1547,6 +1552,7 @@ impl Function {
             Function::Textjoin,
             Function::Substitute,
             Function::Ispmt,
+            Function::Accrint,
             Function::Rri,
             Function::Sln,
             Function::Syd,
@@ -2089,6 +2095,7 @@ impl<'a> Model<'a> {
             Function::Textjoin => self.fn_textjoin(args, cell),
             Function::Substitute => self.fn_substitute(args, cell),
             Function::Ispmt => self.fn_ispmt(args, cell),
+            Function::Accrint => self.fn_accrint(args, cell),
             Function::Rri => self.fn_rri(args, cell),
             Function::Sln => self.fn_sln(args, cell),
             Function::Syd => self.fn_syd(args, cell),

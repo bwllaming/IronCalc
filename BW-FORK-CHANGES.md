@@ -134,6 +134,19 @@ for Conductor's IronCalc adapter evidence.
 - `base/src/expressions/parser/static_analysis.rs`
   - Classifies `RECEIVED` as scalar-only input with optional basis.
 
+## ACCRINT Financial Formula
+
+- `base/src/functions/mod.rs`
+  - Registers the English `ACCRINT` function name for Conductor financial
+    formula evidence without changing localized language payloads.
+- `base/src/functions/financial.rs`
+  - Adds scalar `ACCRINT(issue, first_interest, settlement, rate, par,
+    frequency, [basis], [calc_method])` evaluation using the existing Excel
+    date-basis year fraction helper.
+- `base/src/expressions/parser/static_analysis.rs`
+  - Classifies `ACCRINT` as scalar-only input with optional basis and
+    calc-method arguments.
+
 ## FORECAST.ETS.SEASONALITY Statistical Formula
 
 - `fork/sheets-engine/src/lib.rs`
