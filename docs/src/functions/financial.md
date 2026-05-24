@@ -13,7 +13,7 @@ You can track the progress in this [GitHub issue](https://github.com/ironcalc/Ir
 | ---------- | ---------------------------------------------- | ------------------ |
 | ACCRINT    | <Badge type="info" text="Not implemented yet" /> | –                  |
 | ACCRINTM   | <Badge type="info" text="Not implemented yet" /> | –                  |
-| AMORDEGRC  | <Badge type="info" text="Not implemented yet" /> | –                  |
+| AMORDEGRC  | <Badge type="tip" text="Available" />          | –                  |
 | AMORLINC   | <Badge type="info" text="Not implemented yet" /> | –                  |
 | COUPDAYBS  | <Badge type="info" text="Not implemented yet" /> | –                  |
 | COUPDAYS   | <Badge type="info" text="Not implemented yet" /> | –                  |

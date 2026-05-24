@@ -158,6 +158,18 @@ for Conductor's IronCalc adapter evidence.
 - `base/src/expressions/parser/static_analysis.rs`
   - Classifies `ACCRINTM` as scalar-only input with optional basis.
 
+## AMORDEGRC Financial Formula
+
+- `base/src/functions/mod.rs`
+  - Registers the English `AMORDEGRC` function name for Conductor financial
+    formula evidence without changing localized language payloads.
+- `base/src/functions/financial.rs`
+  - Adds scalar `AMORDEGRC(cost, date_purchased, first_period, salvage,
+    period, rate, [basis])` evaluation using the existing Excel date-basis
+    year fraction helper and degressive depreciation coefficients.
+- `base/src/expressions/parser/static_analysis.rs`
+  - Classifies `AMORDEGRC` as scalar-only input with optional basis.
+
 ## FORECAST.ETS.SEASONALITY Statistical Formula
 
 - `fork/sheets-engine/src/lib.rs`

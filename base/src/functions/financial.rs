@@ -1538,6 +1538,118 @@ impl<'a> Model<'a> {
         CalcResult::Number(result)
     }
 
+    // AMORDEGRC(cost, date_purchased, first_period, salvage, period, rate, [basis])
+    pub(crate) fn fn_amordegrc(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
+        if !(6..=7).contains(&args.len()) {
+            return CalcResult::new_args_number_error(cell);
+        }
+        let mut cost = match self.get_number_no_bools(&args[0], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let date_purchased = match self.get_number_no_bools(&args[1], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let first_period = match self.get_number_no_bools(&args[2], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let salvage = match self.get_number_no_bools(&args[3], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let period = match self.get_number_no_bools(&args[4], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let mut rate = match self.get_number_no_bools(&args[5], cell) {
+            Ok(f) => f,
+            Err(s) => return s,
+        };
+        let basis = if args.len() == 7 {
+            match self.get_number_no_bools(&args[6], cell) {
+                Ok(f) => f.trunc() as i32,
+                Err(s) => return s,
+            }
+        } else {
+            0
+        };
+
+        if date_purchased > first_period
+            || rate <= 0.0
+            || salvage > cost
+            || cost <= 0.0
+            || salvage < 0.0
+            || period < 0.0
+        {
+            return CalcResult::new_error(
+                Error::NUM,
+                cell,
+                "Invalid data for AMORDEGRC".to_string(),
+            );
+        }
+        if !(0..=4).contains(&basis) {
+            return CalcResult::new_error(Error::NUM, cell, "Invalid basis".to_string());
+        }
+
+        let depreciation_life = 1.0 / rate;
+        let depreciation_coeff = if depreciation_life < 3.0 {
+            1.0
+        } else if depreciation_life < 5.0 {
+            1.5
+        } else if depreciation_life <= 6.0 {
+            2.0
+        } else {
+            2.5
+        };
+        rate *= depreciation_coeff;
+
+        let year_fraction = match self.fn_yearfrac(
+            &[
+                args[1].clone(),
+                args[2].clone(),
+                Node::NumberKind(basis as f64),
+            ],
+            cell,
+        ) {
+            CalcResult::Number(f) => f,
+            s => return s,
+        };
+
+        let mut depreciation = (year_fraction * rate * cost).round();
+        cost -= depreciation;
+        let mut remaining_depreciable = cost - salvage;
+        let periods = period.trunc() as u32;
+
+        for n in 0..periods {
+            depreciation = (rate * cost).round();
+            remaining_depreciable -= depreciation;
+
+            if remaining_depreciable < 0.0 {
+                if periods - n <= 1 {
+                    return CalcResult::Number((cost * 0.5).round());
+                }
+                return CalcResult::Number(0.0);
+            }
+
+            cost -= depreciation;
+        }
+
+        if depreciation.is_infinite() {
+            return CalcResult::new_error(Error::DIV, cell, "Division by 0".to_string());
+        }
+        if depreciation.is_nan() {
+            return CalcResult::new_error(
+                Error::NUM,
+                cell,
+                "Invalid data for AMORDEGRC".to_string(),
+            );
+        }
+
+        CalcResult::Number(depreciation)
+    }
+
     // DISC(settlement, maturity, pr, redemption, [basis])
     pub(crate) fn fn_disc(&mut self, args: &[Node], cell: CellReferenceIndex) -> CalcResult {
         if !(4..=5).contains(&args.len()) {
